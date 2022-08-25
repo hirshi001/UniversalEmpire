@@ -1,0 +1,13 @@
+eclipse.project.name = appName + '-shared'
+
+dependencies {
+    api "com.github.hirshi001:betternetworking:$betterNetworkingVersion"
+    api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
+    api "com.github.czyzby:noise4j:$noise4jVersion"
+    api "com.github.tommyettinger:jbump:$jbumpVersion"
+    api "com.sudoplay.joise:joise:$joiseVersion"
+    api "com.squidpony:squidlib-extra:$squidlibExtraVersion"
+    api "com.squidpony:squidlib-util:$squidlibUtilVersion"
+    api "com.squidpony:squidlib:$squidlibVersion"
+    api "com.badlogicgames.gdx:gdx:$gdxVersion"
+}
