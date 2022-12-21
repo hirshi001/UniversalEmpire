@@ -37,7 +37,8 @@ public class ConnectingScreen extends GameScreen {
                 .register(SyncPacket::new, PacketHandlers::handleSyncPacket, SyncPacket.class, 6)
                 .register(PropertyPacket::new, PacketHandlers::handlePropertyPacket, PropertyPacket.class, 7)
                 .register(RequestPropertyNamePacket::new, null, RequestPropertyNamePacket.class, 8)
-                .register(PropertyNamePacket::new, PacketHandlers::handlePropertyNamePacket, PropertyNamePacket.class, 9);
+                .register(PropertyNamePacket::new, PacketHandlers::handlePropertyNamePacket, PropertyNamePacket.class, 9)
+				.register(MaintainConnectionPacket::new, null, MaintainConnectionPacket.class, 10);
         NetworkData networkData = new DefaultNetworkData(Network.PACKET_ENCODER_DECODER, packetRegistryContainer);
         try {
             client = app.networkFactory.createClient(networkData, app.bufferFactory, ip, Network.PORT);

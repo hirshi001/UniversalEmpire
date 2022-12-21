@@ -14,7 +14,7 @@ import com.hirshi001.networking.packet.ByteBufSerializable;
 
 public abstract class GamePiece extends Item implements ID, ByteBufSerializable {
 
-    public Rectangle bounds;
+    public final Rectangle bounds;
     public Field field;
     public Chunk chunk;
     private int gameId;
@@ -39,8 +39,8 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
     
 
     public GamePiece(){
-        setID(GamePieces.getId(this));
         bounds = new Rectangle();
+        setID(GamePieces.getId(this));
     }
 
     public void tick(float delta) {
@@ -89,7 +89,7 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
     }
 
     public void update(){
-        if(worldInteractable()) field.update(this, bounds.x, bounds.y, bounds.width, bounds.height);
+        if(worldInteractable() && field!=null) field.update(this, bounds.x, bounds.y, bounds.width, bounds.height);
     }
 
     @Override

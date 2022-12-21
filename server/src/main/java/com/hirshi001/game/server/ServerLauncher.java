@@ -55,6 +55,8 @@ public class ServerLauncher {
 	}
 
 	public static void startServer() throws IOException, ExecutionException, InterruptedException {
+
+
 		Tiles.register();
 		GamePieces.register();
 		GameSettings.runnablePoster = ServerLauncher::postRunnable;
@@ -73,7 +75,7 @@ public class ServerLauncher {
 				.register(PropertyPacket::new, null, PropertyPacket.class, 7)
 				.register(RequestPropertyNamePacket::new, PacketHandlers::handleRequestPropertyNamePacket, RequestPropertyNamePacket.class, 8)
 				.register(PropertyNamePacket::new, null, PropertyNamePacket.class, 9)
-				.register(SoftTrackChunkPacket::new, PacketHandlers::handleSoftTrackChunkPacket, SoftTrackChunkPacket.class, 10);
+				.register(MaintainConnectionPacket::new, null, MaintainConnectionPacket.class, 10);
 
 
 		NetworkData networkData = new DefaultNetworkData(Network.PACKET_ENCODER_DECODER, registryContainer);
@@ -84,7 +86,7 @@ public class ServerLauncher {
 			public void initChannel(Channel channel) {
 				channel.setChannelOption(ChannelOption.TCP_AUTO_FLUSH, true);
 				channel.setChannelOption(ChannelOption.UDP_AUTO_FLUSH, true);
-				channel.setChannelOption(ChannelOption.PACKET_TIMEOUT, (int)TimeUnit.SECONDS.toMillis(10));
+				channel.setChannelOption(ChannelOption.PACKET_TIMEOUT, TimeUnit.SECONDS.toMillis(10));
 			}
 		});
 
@@ -115,10 +117,11 @@ public class ServerLauncher {
 		System.out.println("Server started");
 
 		Timer timer = new Timer();
+		final long period = TimeUnit.SECONDS.toMillis(1)/GameSettings.TICKS_PER_SECOND;
 		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
-				if(Math.random()<0.1) field.addGamePiece(new Player());
+				if(Math.random()<0.05) field.addGamePiece(new Player());
 				try{
 					synchronized (runnables) {
 						executingRunnables.clear();
@@ -130,9 +133,13 @@ public class ServerLauncher {
 					}
 					field.tick(GameSettings.SECONDS_PER_TICK);
 				}catch (Exception e){e.printStackTrace();}
+				int bytesSent = Network.PACKET_ENCODER_DECODER.encodedBytes.getAndSet(0);
+				float bytesPerSecond = bytesSent * GameSettings.TICKS_PER_SECOND;
+				//System.out.println("Bytes per second " + bytesPerSecond);
+				int maxPacketSze = Network.PACKET_ENCODER_DECODER.maxPacketSize.getAndSet(0);
+				//System.out.println("Max packet size = " + maxPacketSze);
 			}
 		};
-		long period = TimeUnit.SECONDS.toMillis(1)/GameSettings.TICKS_PER_SECOND;
 		timer.scheduleAtFixedRate(timerTask, 0, period);
 
 		Scanner scanner = new Scanner(System.in);
@@ -156,6 +163,9 @@ public class ServerLauncher {
 		}
 		if(command.equalsIgnoreCase("spawn")){
 			spawnCommand(args);
+		}
+		if(command.equalsIgnoreCase("setProp")){
+			setPropertyCommand(args);
 		}
 	}
 
@@ -199,6 +209,46 @@ public class ServerLauncher {
 
 		field.addGamePiece(piece);
 		System.out.println("Spawned " + piece.getClass().getSimpleName() + ": " + piece.getGameId());
+	}
+
+	private static void setPropertyCommand(String[] args){
+		if(args.length<4) return;
+		int gamePieceId = Integer.parseInt(args[1]);
+		String property = args[2];
+
+		StringBuilder valueBuilder = new StringBuilder();
+		for(int i=3;i<args.length-1;i++){
+			valueBuilder.append(args[i]).append(" ");
+		}
+		valueBuilder.append(args[args.length-1]);
+		String value = valueBuilder.toString();
+
+		Object v = null;
+		if(value.equals("true")) v = true;
+		else if(value.equals("false")) v = false;
+		else {
+			try {
+				v = Integer.parseInt(value);
+			} catch (Exception ignored) {}
+			if (v == null) {
+				try {
+					v = Float.parseFloat(value);
+				} catch (Exception ignored) {}
+			}
+			if(v==null){
+				v = value;
+			}
+		}
+
+		GamePiece piece = field.getGamePiece(gamePieceId);
+		if(piece==null){
+			System.out.println("Game piece not found: " + gamePieceId);
+			return;
+		}
+		final Object vf = v;
+		GameSettings.runnablePoster.postRunnable(()->{
+			piece.getProperties().put(property, vf);
+		});
 	}
 
 

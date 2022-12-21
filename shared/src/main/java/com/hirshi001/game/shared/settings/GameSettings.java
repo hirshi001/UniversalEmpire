@@ -9,7 +9,7 @@ import com.hirshi001.game.shared.util.serializer.*;
 
 public class GameSettings {
 
-    public static final float CELL_SIZE = 1F;
+    public static final float CELL_SIZE =8F;
     public static final int CHUNK_SIZE = 16;
     public static RunnablePoster runnablePoster;
     public static final int TICKS_PER_SECOND = 20;
@@ -27,6 +27,7 @@ public class GameSettings {
         MANAGER.register(Double.class, new DoubleSerializer(), 5);
         MANAGER.register(Float.class, new FloatSerializer(), 6);
         MANAGER.register(LinePath.class, new PathSerializer(), 7);
+        MANAGER.register(String.class, new StringSerializer(), 8);
     }
 
 

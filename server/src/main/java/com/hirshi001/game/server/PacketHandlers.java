@@ -9,6 +9,7 @@ import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.props.Properties;
 import com.hirshi001.networking.packethandlercontext.PacketHandlerContext;
+import com.hirshi001.networking.packethandlercontext.PacketType;
 
 public class PacketHandlers {
 
@@ -19,6 +20,9 @@ public class PacketHandlers {
 
         GameSettings.runnablePoster.postRunnable( ()-> {
             Chunk chunk = field.getChunk(point);
+            if(chunk==null) {
+                chunk = field.addChunk(point.x, point.y);
+            }
             if(!ctx.packet.untrack){
                 playerData.trackedChunks.add(point);
                 ((ServerChunk) chunk).trackers.add(playerData);
@@ -56,7 +60,7 @@ public class PacketHandlers {
             if(player.lastTickUpdate > ctx.packet.tick) return;
             player.readSyncBytes(ctx.packet.buffer);
             player.update();
-            ctx.networkSide.asServer().getClients().sendUDPToAll(new SyncPacket(player.field.tick, player), null).perform();
+            ctx.networkSide.asServer().getClients().sendToAll(new SyncPacket(player.field.tick, player), PacketType.UDP, null).perform();
         });
 
     }
@@ -72,22 +76,5 @@ public class PacketHandlers {
         ctx.channel.sendTCP(new PropertyNamePacket(packet.gamePieceId, packet.propertyId, name, value), null).perform();
     }
 
-    public static void handleSoftTrackChunkPacket(PacketHandlerContext<SoftTrackChunkPacket> ctx){
-        PlayerData playerData = (PlayerData) ctx.channel.getAttachment();
-        HashedPoint point = new HashedPoint(ctx.packet.chunkX, ctx.packet.chunkY);
-        Field field = ServerLauncher.field;
-
-        GameSettings.runnablePoster.postRunnable( ()-> {
-            ServerChunk chunk = (ServerChunk) field.getChunk(point);
-            if(!ctx.packet.untrack){
-                playerData.softTrackedChunks.add(point);
-                chunk.softTrackers.add(playerData);
-
-            }else{
-                playerData.softTrackedChunks.remove(point);
-                chunk.softTrackers.remove(playerData);
-            }
-        });
-    }
 
 }

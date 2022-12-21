@@ -38,7 +38,7 @@ public class MainGameScreen extends GameScreen {
 
         fieldRender = new FieldRender(field);
 
-        app.client.sendTCPWithResponse(new JoinGamePacket(), null, 1000).map(ctx -> (PacketHandlerContext<GameInitPacket>) ctx)
+        app.client.getChannel().sendTCPWithResponse(new JoinGamePacket(), null, 1000)
                         .then((ctx)->{
                         }).onFailure((cause)->{
                             Gdx.app.postRunnable( ()-> app.setScreen(new ErrorScreen(app, cause)));
@@ -54,7 +54,7 @@ public class MainGameScreen extends GameScreen {
         if(app.field!=null) app.field.tick(delta);
         fieldRender.getUserInput(delta);
         fieldRender.render(delta);
-        fieldRender.debugRender();
+        //fieldRender.debugRender();
 
     }
 

@@ -5,7 +5,7 @@ import com.hirshi001.networking.packet.Packet;
 
 public class GameInitPacket extends Packet {
 
-    //public int playerId;
+    public int playerId;
 
     public GameInitPacket() {
         super();
@@ -13,18 +13,18 @@ public class GameInitPacket extends Packet {
 
     public GameInitPacket(int playerId){
         super();
-        //this.playerId = playerId;
+        this.playerId = playerId;
     }
 
     @Override
     public void writeBytes(ByteBuffer out) {
         super.writeBytes(out);
-        //out.writeInt(playerId);
+        out.writeInt(playerId);
     }
 
     @Override
     public void readBytes(ByteBuffer in) {
         super.readBytes(in);
-        //playerId = in.readInt();
+        playerId = in.readInt();
     }
 }

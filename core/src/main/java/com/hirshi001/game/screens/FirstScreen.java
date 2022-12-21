@@ -48,7 +48,7 @@ public class FirstScreen extends GameScreen {
 	@Override
 	public void render(float delta) {
 		// Draw your screen here. "delta" is the time since last render in seconds.
-		batch.enableBlending();
+		// batch.enableBlending();
 		batch.begin();
 		ScreenUtils.clear(Color.WHITE);
 

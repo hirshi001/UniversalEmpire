@@ -1,41 +1,36 @@
 package com.hirshi001.game;
 
+import com.badlogic.gdx.math.Vector2;
 import com.hirshi001.game.render.ActorMap;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.game.GamePiece;
-import com.hirshi001.game.shared.packets.SoftTrackChunkPacket;
+import com.hirshi001.game.shared.packets.MaintainConnectionPacket;
 import com.hirshi001.game.shared.packets.TrackChunkPacket;
-import com.hirshi001.game.shared.settings.GameSettings;
-import com.hirshi001.game.shared.tiles.Tile;
-import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.Point;
-import com.hirshi001.game.shared.util.props.PropertiesManager;
 import com.hirshi001.networking.network.client.Client;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class ClientField extends Field {
 
-    private Client client;
-    private Map<HashedPoint, Long> chunkLastRequested = new HashMap<>();
-    private Map<Point, Chunk> softLoadedChunks = new HashMap<>();
-    private Tile[][] softLoadedTiles = new Tile[GameSettings.CHUNK_SIZE][GameSettings.CHUNK_SIZE];
-    private HashedPoint tempHashPoint = new HashedPoint();
+    private final Client client;
+
+    private final Map<Point, Long> chunkLastRequested = new HashMap<>();
+    private final Map<Chunk, Long> chunkLife = new HashMap<>();
+
+    private final Vector2 position = new Vector2();
+
+    public Vector2 getPosition() {
+        return position;
+    }
 
     public ClientField(Client client, float cellSize, int chunkSize) {
         super(cellSize, chunkSize);
         this.client = client;
-        for(int x = 0; x < GameSettings.CHUNK_SIZE; x++) {
-            for(int y = 0; y < GameSettings.CHUNK_SIZE; y++) {
-                softLoadedTiles[x][y] = Tiles.DEFAULT_TILE;
-            }
-        }
     }
 
     @Override
@@ -47,7 +42,9 @@ public class ClientField extends Field {
 
     @Override
     public Chunk loadChunk(int x, int y) {
-        if(containsChunk(x, y)) return getChunk(x, y);
+        if(containsChunk(x, y)){
+            return getChunk(x, y);
+        }
         HashedPoint point = new HashedPoint(x, y);
         if(chunkLastRequested.containsKey(point)){
             long lastRequestTime = chunkLastRequested.get(point);
@@ -56,33 +53,42 @@ public class ClientField extends Field {
             }
         }
         chunkLastRequested.put(new HashedPoint(point.x, point.y), System.currentTimeMillis());
-        client.sendTCP(new TrackChunkPacket(point.x, point.y), null).perform();
+        client.getChannel().sendTCP(new TrackChunkPacket(point.x, point.y), null).perform();
         return null;
     }
 
-    public void softLoadChunk(int x, int y){
-        HashedPoint point = new HashedPoint(x, y);
-        if(softLoadedChunks.containsKey(point)){
-            return;
-        }
-        Chunk chunk = new Chunk(GameSettings.CHUNK_SIZE, point);
-        chunk.softLoaded = true;
-        softLoadedChunks.put(point, chunk);
-        client.sendTCP(new SoftTrackChunkPacket(point.x, point.y), null).perform();
+    @Override
+    public Chunk addChunk(Chunk chunk) {
+        if(chunk==null) return null;
+        chunkLastRequested.remove(chunk.chunkPosition);
+        return super.addChunk(chunk);
     }
 
     @Override
     public void tick(float delta) {
-        for(int i=-2;i<=2;i++){
-            for(int j=-2;j<=2;j++){
-                addChunk(i, j);
+        client.getChannel().sendTCP(new MaintainConnectionPacket(), null).perform();
+        Vector2 position = getPosition();
+        Point chunkP = getChunkPosition(position.x, position.y);
+        int s = 2;
+        for(int i=-s;i<=s;i++){
+            for(int j=-s;j<=s;j++){
+                Chunk chunk = addChunk(chunkP.x + i, chunkP.y + j);
+                if(chunk!=null){
+                    chunkLife.put(chunk, 0L);
+                }
             }
         }
-        for(int i=-3;i<=3;i++){
-            for(int j=-3;j<=3;j++){
-                softLoadChunk(i, j);
-            }
+        for(Chunk chunk:chunks.values()){
+            chunkLife.putIfAbsent(chunk, 0L);
         }
+        chunkLife.replaceAll((chunk, life) -> life + 1);
+        chunkLife.entrySet().removeIf(entry -> {
+            if(entry.getValue() > 20){
+                removeChunk(entry.getKey().getChunkX(), entry.getKey().getChunkY());
+                return true;
+            }
+            return false;
+        });
         super.tick(delta);
     }
 
@@ -93,14 +99,14 @@ public class ClientField extends Field {
 
     @Override
     public Chunk relocateGamePiece(GamePiece item, Chunk original) {
-        Chunk chunk = super.relocateGamePiece(item, original);
-        if(chunk!=null) return chunk;
-        return getSoftChunk(item.getCenterX(), item.getCenterY());
+        return super.relocateGamePiece(item, original);
     }
 
-    public Chunk getSoftChunk(float x, float y){
-        getChunkPosition(x, y, tempHashPoint);
-        tempHashPoint.recalculateHash();
-        return softLoadedChunks.get(tempHashPoint);
+    @Override
+    public boolean removeChunk(Point chunk) {
+        client.getChannel().sendTCP(new TrackChunkPacket(chunk.x, chunk.y, true), null).perform();
+        chunkLastRequested.remove(chunk);
+        return super.removeChunk(chunk);
+
     }
 }

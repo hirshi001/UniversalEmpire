@@ -19,6 +19,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
+import com.hirshi001.game.ClientField;
 import com.hirshi001.game.render.tilerenderers.TileRenderers;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
@@ -112,6 +113,7 @@ public class FieldRender extends InputAdapter{
         if(input.equals(Vector2.Zero)) return;
         input.nor();
         camera.position.add(input.x * delta * 100, input.y * delta * 100, 0);
+        ((ClientField)field).getPosition().set(camera.position.x, camera.position.y);
         camera.update();
     }
 
@@ -218,7 +220,7 @@ public class FieldRender extends InputAdapter{
     public boolean scrolled(float amountX, float amountY) {
         camera.zoom += amountY/100F;
         System.out.println(camera.zoom);
-        camera.zoom = MathUtils.clamp(camera.zoom, 0.5f, 5f);
+        camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 5f);
         camera.update();
         return true;
     }

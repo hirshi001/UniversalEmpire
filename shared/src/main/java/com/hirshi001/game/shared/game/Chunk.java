@@ -18,7 +18,6 @@ public class Chunk{
 
     public final Map<HashedPoint, GamePiece> tileGamePieces = new HashMap<>();
     private final HashedPoint tempPoint = new HashedPoint();
-    public boolean softLoaded = false;
 
     public Chunk(int chunkSize, HashedPoint chunkPosition){
         this(chunkSize, chunkPosition, new Tile[chunkSize][chunkSize]);
@@ -27,7 +26,7 @@ public class Chunk{
     public Chunk(int chunkSize, HashedPoint chunkPosition, Tile[][] tiles) {
         this.chunkSize = chunkSize;
         this.chunkPosition = chunkPosition;
-        this.bounds = new Rectangle(getChunkX() * getChunkSize(), getChunkY() * getChunkSize(), getChunkSize(), getChunkSize());
+        this.bounds = new Rectangle(getChunkX() * getChunkSize()-1, getChunkY() * getChunkSize()-1, getChunkSize()+2, getChunkSize()+2);
         this.tiles = tiles;
     }
 

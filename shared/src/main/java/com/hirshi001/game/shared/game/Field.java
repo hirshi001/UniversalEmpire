@@ -75,9 +75,11 @@ public abstract class Field extends World{
     }
 
     protected boolean remove0(GamePiece gamePiece) {
-        remove(gamePiece);
+        try {
+            remove(gamePiece);
+        }catch (Exception ignored){} //catch and ignore if a game piece is already removed
         if(gamePiece.chunk!=null) gamePiece.chunk.remove(gamePiece);
-        return gamePieces.remove(gamePiece.getID())!=null;
+        return gamePieces.remove(gamePiece.getGameId())!=null;
     }
 
     protected void add0(GamePiece gamePiece, int i) {
@@ -87,7 +89,9 @@ public abstract class Field extends World{
         temp.set(MathUtils.floor(gamePiece.getCenterX()/getChunkSize()), MathUtils.floor(gamePiece.getCenterY()/getChunkSize()));
         temp.recalculateHash();
         Chunk chunk = chunks.get(temp);
-        if(chunk == null) return;
+        if(chunk == null){
+            return;
+        }
         chunk.add(gamePiece);
 
         if(gamePiece.worldInteractable()){
@@ -243,6 +247,7 @@ public abstract class Field extends World{
 
     public void tick(float delta){
         tick++;
+
         for(GamePiece gamePiece:getItems()){
             gamePiece.tick(delta);
         }
@@ -263,9 +268,11 @@ public abstract class Field extends World{
             removedGamePieces.addAll(gamePiecesToRemove);
             gamePiecesToRemove.clear();
         }
+
         for(GamePiece gamePiece:removedGamePieces){
             remove0(gamePiece);
         }
+
     }
 
     private void relocation(Chunk chunk){

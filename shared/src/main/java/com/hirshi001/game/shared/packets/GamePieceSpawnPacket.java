@@ -16,6 +16,7 @@ public class GamePieceSpawnPacket extends Packet {
     public GamePieceSpawnPacket(GamePiece gamePiece) {
         super();
         this.gamePiece = gamePiece;
+
     }
 
     @Override

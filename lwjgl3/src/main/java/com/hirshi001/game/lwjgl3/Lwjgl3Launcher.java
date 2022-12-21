@@ -7,6 +7,7 @@ import com.hirshi001.buffer.bufferfactory.DefaultBufferFactory;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.javanetworking.JavaNetworkFactory;
 import com.hirshi001.networking.network.NetworkFactory;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

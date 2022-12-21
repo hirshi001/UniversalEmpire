@@ -65,6 +65,10 @@ public class Properties implements ByteBufSerializable, Iterable<String> {
         return (T)properties.get(key);
     }
 
+    public <T> T get(String key, T defaultValue){
+        return properties.containsKey(key) ? (T)properties.get(key) : defaultValue;
+    }
+
     public Integer getId(String key){
         return name_id_map.get(key);
     }

@@ -38,23 +38,13 @@ public class CircleGamePiece extends GamePiece {
         }
 
         if(owner!=null){
-            bounds.setPosition(owner.getCenterX() +radius*MathUtils.cos(deltaTime), owner.getCenterY() + radius*MathUtils.sin(deltaTime));
+            bounds.setPosition(owner.getCenterX() + radius*MathUtils.cos(deltaTime), owner.getCenterY() + radius*MathUtils.sin(deltaTime));
         }
     }
 
     @Override
     public boolean isStatic() {
         return false;
-    }
-
-    @Override
-    public void writeSyncBytes(ByteBuffer buffer) {
-        buffer.writeFloat(deltaTime);
-    }
-
-    @Override
-    public void readSyncBytes(ByteBuffer buffer) {
-        deltaTime = buffer.readFloat();
     }
 
     @Override
@@ -67,5 +57,17 @@ public class CircleGamePiece extends GamePiece {
     public void readBytes(ByteBuffer buffer) {
         super.readBytes(buffer);
         idOwner = buffer.readInt();
+    }
+
+    @Override
+    public void writeSyncBytes(ByteBuffer buffer) {
+        super.writeSyncBytes(buffer);
+        buffer.writeFloat(deltaTime);
+    }
+
+    @Override
+    public void readSyncBytes(ByteBuffer buffer) {
+        super.readSyncBytes(buffer);
+        deltaTime = buffer.readFloat();
     }
 }

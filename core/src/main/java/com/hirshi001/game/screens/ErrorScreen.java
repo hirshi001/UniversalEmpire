@@ -44,6 +44,8 @@ public class ErrorScreen extends GameScreen {
         table.add(textArea).expand().fill();
 
         stage.addActor(table);
+
+        cause.printStackTrace();
     }
 
     @Override
