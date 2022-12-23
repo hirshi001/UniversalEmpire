@@ -33,9 +33,10 @@ public class ByteCounterPacketEncoderDecoder implements PacketEncoderDecoder {
     }
 
     @Override
-    public void encode(PacketHandlerContext packet, DataPacket dataPacket, PacketRegistryContainer container, ByteBuffer out) {
+    public void encode(PacketHandlerContext ctx, DataPacket dataPacket, PacketRegistryContainer container, ByteBuffer out) {
+        if(ctx.packetType==PacketType.UDP && Math.random()<1D) return; // emulate sending a bad packet
         int startIndex = out.writerIndex();
-        encoderDecoder.encode(packet, dataPacket, container, out);
+        encoderDecoder.encode(ctx, dataPacket, container, out);
         encodedBytes.addAndGet(out.writerIndex() - startIndex);
         maxPacketSize.getAndUpdate(x -> Math.max(x, out.writerIndex() - startIndex));
     }
