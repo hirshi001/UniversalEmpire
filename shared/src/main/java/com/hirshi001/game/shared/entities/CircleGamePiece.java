@@ -4,14 +4,14 @@ import com.badlogic.gdx.math.MathUtils;
 import com.hirshi001.buffer.buffers.ByteBuffer;
 import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.game.GamePiece;
+import com.hirshi001.game.shared.util.props.Properties;
 
 public class CircleGamePiece extends GamePiece {
 
     private int idOwner;
     GamePiece owner;
     float deltaTime;
-    float radius = 3F;
-
+    public float distFromOwner = 3F;
     public CircleGamePiece() {
         super();
     }
@@ -26,19 +26,22 @@ public class CircleGamePiece extends GamePiece {
         bounds.width=1F;
         bounds.height=1F;
         update();
+        if(field.isServer()){
+            Properties props = getProperties();
+            props.put("radius", 0.5F);
+        }
     }
 
     @Override
     public void tick(float delta) {
         super.tick(delta);
         this.deltaTime += delta;
-        radius = deltaTime/10F;
         if(owner==null || !owner.alive){
             owner=field.getGamePiece(idOwner);
         }
 
         if(owner!=null){
-            bounds.setPosition(owner.getCenterX() + radius*MathUtils.cos(deltaTime), owner.getCenterY() + radius*MathUtils.sin(deltaTime));
+            bounds.setPosition(owner.getCenterX() + distFromOwner*MathUtils.cos(deltaTime), owner.getCenterY() + distFromOwner*MathUtils.sin(deltaTime));
         }
     }
 

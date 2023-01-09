@@ -3,20 +3,19 @@ package com.hirshi001.game.shared.game;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.dongbat.jbump.World;
-import com.hirshi001.game.shared.packets.PropertyPacket;
 import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.Point;
 import com.hirshi001.game.shared.util.Resources;
-import com.hirshi001.game.shared.util.props.PropertiesManager;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class Field extends World{
+public abstract class Field extends World {
 
     private final int chunkSize;
 
-    protected final HashMap<HashedPoint, Chunk> chunks = new HashMap<>();
+    protected final Map<HashedPoint, Chunk> chunks = new ConcurrentHashMap<>();
     private int nextId;
     public long tick = 0;
     private final Map<Integer, GamePiece> gamePieces;
@@ -31,7 +30,7 @@ public abstract class Field extends World{
         gamePieces = new HashMap<>();
     }
 
-    public Collection<Chunk> getChunks(){
+    public Collection<Chunk> getChunks() {
         return chunks.values();
     }
 
@@ -66,8 +65,8 @@ public abstract class Field extends World{
         }
     }
 
-    public boolean removeGamePiece(GamePiece gamePiece){
-        if(gamePiece == null) return false;
+    public boolean removeGamePiece(GamePiece gamePiece) {
+        if (gamePiece == null) return false;
         synchronized (gamePiecesToRemove) {
             gamePiecesToRemove.add(gamePiece);
         }
@@ -77,24 +76,25 @@ public abstract class Field extends World{
     protected boolean remove0(GamePiece gamePiece) {
         try {
             remove(gamePiece);
-        }catch (Exception ignored){} //catch and ignore if a game piece is already removed
-        if(gamePiece.chunk!=null) gamePiece.chunk.remove(gamePiece);
-        return gamePieces.remove(gamePiece.getGameId())!=null;
+        } catch (Exception ignored) {
+        } //catch and ignore if a game piece is already removed
+        if (gamePiece.chunk != null) gamePiece.chunk.remove(gamePiece);
+        return gamePieces.remove(gamePiece.getGameId()) != null;
     }
 
     protected void add0(GamePiece gamePiece, int i) {
         HashedPoint temp = points.get();
         gamePieces.put(i, gamePiece);
         gamePiece.setGameId(i);
-        temp.set(MathUtils.floor(gamePiece.getCenterX()/getChunkSize()), MathUtils.floor(gamePiece.getCenterY()/getChunkSize()));
+        temp.set(MathUtils.floor(gamePiece.getCenterX() / getChunkSize()), MathUtils.floor(gamePiece.getCenterY() / getChunkSize()));
         temp.recalculateHash();
         Chunk chunk = chunks.get(temp);
-        if(chunk == null){
+        if (chunk == null) {
             return;
         }
         chunk.add(gamePiece);
 
-        if(gamePiece.worldInteractable()){
+        if (gamePiece.worldInteractable()) {
             add(gamePiece, gamePiece.bounds.x, gamePiece.bounds.y, gamePiece.bounds.width, gamePiece.bounds.height);
         }
         gamePiece.setField(this);
@@ -124,11 +124,11 @@ public abstract class Field extends World{
         return chunks.get(point);
     }
 
-    public Chunk addChunk(int chunkX, int chunkY){
+    public Chunk addChunk(int chunkX, int chunkY) {
         HashedPoint temp = points.get();
         temp.set(chunkX, chunkY);
         temp.recalculateHash();
-        if(containsChunk(temp)){
+        if (containsChunk(temp)) {
             Chunk chunk = chunks.get(temp);
             points.release(temp);
             return chunk;
@@ -138,27 +138,27 @@ public abstract class Field extends World{
 
     public abstract Chunk loadChunk(int chunkX, int chunkY);
 
-    public Chunk getChunkFromCoord(float x, float y){
+    public Chunk getChunkFromCoord(float x, float y) {
         HashedPoint temp = points.get();
-        temp.set(MathUtils.floor(x/getChunkSize()), MathUtils.floor(y/getChunkSize()));
+        temp.set(MathUtils.floor(x / getChunkSize()), MathUtils.floor(y / getChunkSize()));
         Chunk chunk = chunks.get(temp);
         points.release(temp);
         return chunk;
     }
 
-    public Chunk getChunkFromCoord(int x, int y){
+    public Chunk getChunkFromCoord(int x, int y) {
         HashedPoint temp = points.get();
-        if(x<0) temp.x = (x+1)/getChunkSize()-1;
-        else temp.x = x/getChunkSize();
-        if(y<0) temp.y = (y+1)/getChunkSize()-1;
-        else temp.y = y/getChunkSize();
+        if (x < 0) temp.x = (x + 1) / getChunkSize() - 1;
+        else temp.x = x / getChunkSize();
+        if (y < 0) temp.y = (y + 1) / getChunkSize() - 1;
+        else temp.y = y / getChunkSize();
         temp.recalculateHash();
         Chunk chunk = chunks.get(temp);
         points.release(temp);
         return chunk;
     }
 
-    public boolean removeChunk(int chunkX, int chunkY){
+    public boolean removeChunk(int chunkX, int chunkY) {
         HashedPoint temp = points.get();
         temp.set(chunkX, chunkY);
         temp.recalculateHash();
@@ -167,29 +167,29 @@ public abstract class Field extends World{
         return success;
     }
 
-    public boolean containsChunk(Point chunk){
+    public boolean containsChunk(Point chunk) {
         return chunks.containsKey(chunk);
     }
 
-    public void setTile(int x, int y, Tile tile){
+    public void setTile(int x, int y, Tile tile) {
         Chunk chunk = getChunkFromCoord(x, y);
-        if(chunk == null) return;
+        if (chunk == null) return;
         chunk.setTile(x - chunk.getChunkX() * getChunkSize(), y - chunk.getChunkY() * getChunkSize(), tile);
     }
 
-    public void setTile(HashedPoint point, Tile tile){
+    public void setTile(HashedPoint point, Tile tile) {
         setTile(point.x, point.y, tile);
     }
 
-    public void setTileGamePiece(int x, int y, GamePiece piece){
+    public void setTileGamePiece(int x, int y, GamePiece piece) {
         Chunk chunk = getChunkFromCoord(x, y);
-        if(chunk == null) return;
+        if (chunk == null) return;
         chunk.setTileEntity(x - chunk.getChunkX() * getChunkSize(), y - chunk.getChunkY() * getChunkSize(), piece);
     }
 
-    public GamePiece getTileGamePiece(int x, int y){
+    public GamePiece getTileGamePiece(int x, int y) {
         Chunk chunk = getChunkFromCoord(x, y);
-        if(chunk == null){
+        if (chunk == null) {
             return null;
         }
         HashedPoint temp = points.get();
@@ -200,88 +200,93 @@ public abstract class Field extends World{
         return piece;
     }
 
-    public Chunk addChunk(Chunk chunk){
-        if(chunk == null) return null;
+    public Chunk addChunk(Chunk chunk) {
+        if (chunk == null) return null;
         chunks.put(chunk.chunkPosition, chunk);
         chunk.field = this;
-        for(GamePiece gamePiece:chunk.items){
+        for (GamePiece gamePiece : chunk.items) {
             addGamePiece(gamePiece, gamePiece.getGameId());
         }
         return chunk;
     }
 
-    public boolean removeChunk(Point chunk){
+    public boolean removeChunk(Point chunk) {
         Chunk c = chunks.remove(chunk);
-        if(c==null) return false;
-        for(GamePiece gamePiece:c.items){
+        if (c == null) return false;
+        for (GamePiece gamePiece : c.items) {
             removeGamePiece(gamePiece);
         }
         return true;
     }
 
-    public Chunk relocateGamePiece(GamePiece item, Chunk original){
+    public Chunk relocateGamePiece(GamePiece item, Chunk original) {
         HashedPoint temp = points.get();
         getChunkPosition(item.getCenterX(), item.getCenterY(), temp);
         temp.recalculateHash();
         Chunk chunk = chunks.get(temp);
-        points.release(temp);
-        if(chunk==null){
-            removeGamePiece(item);
-            return null;
+        if (chunk == null) {
+            if(isServer() && item.shouldLoadChunk()){
+                addChunk(temp.x, temp.y);
+            }
+            else {
+                removeGamePiece(item);
+                return null;
+            }
         }
-        chunk.add(item);
+        points.release(temp);
+        if(chunk!=null) chunk.add(item);
         return chunk;
     }
 
-    public Point getChunkPosition(float x, float y){
+    public Point getChunkPosition(float x, float y) {
         Point p = new Point();
         getChunkPosition(x, y, p);
         return p;
     }
 
 
-    public void getChunkPosition(float x, float y, Point out){
+    public void getChunkPosition(float x, float y, Point out) {
         out.x = MathUtils.floor(x / chunkSize);
         out.y = MathUtils.floor(y / chunkSize);
     }
 
-    public void tick(float delta){
+    public void tick(float delta) {
         tick++;
 
-        for(GamePiece gamePiece:getItems()){
+        for (GamePiece gamePiece : getItems()) {
             gamePiece.tick(delta);
         }
-        for(Chunk chunk:getChunks()){
+        for (Chunk chunk : getChunks()) {
             relocation(chunk);
         }
-        synchronized (gamePiecesToAdd){
+        synchronized (gamePiecesToAdd) {
             addedGamePieces.clear();
             addedGamePieces.addAll(gamePiecesToAdd);
             gamePiecesToAdd.clear();
         }
-        for(GamePiece gamePiece:addedGamePieces){
+        for (GamePiece gamePiece : addedGamePieces) {
             add0(gamePiece, gamePiece.getGameId());
         }
 
-        synchronized (gamePiecesToRemove){
+        synchronized (gamePiecesToRemove) {
             removedGamePieces.clear();
             removedGamePieces.addAll(gamePiecesToRemove);
             gamePiecesToRemove.clear();
         }
 
-        for(GamePiece gamePiece:removedGamePieces){
+        for (GamePiece gamePiece : removedGamePieces) {
             remove0(gamePiece);
         }
 
     }
 
-    private void relocation(Chunk chunk){
+    private void relocation(Chunk chunk) {
         //use an iterator on items
         Iterator<GamePiece> iterator = chunk.items.iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             GamePiece gamePiece = iterator.next();
-            if(!chunk.bounds.contains(gamePiece.getCenterX(), gamePiece.getCenterY())){
-                if(relocateGamePiece(gamePiece, chunk)!=chunk){
+            if (!chunk.bounds.contains(gamePiece.getCenterX(), gamePiece.getCenterY())) {
+                if (relocateGamePiece(gamePiece, chunk) != chunk) {
                     iterator.remove();
                 }
             }
@@ -291,10 +296,10 @@ public abstract class Field extends World{
 
     @Override
     public Set<GamePiece> getItems() {
-        return (Set<GamePiece>)super.getItems();
+        return (Set<GamePiece>) super.getItems();
     }
 
-    public boolean isServer(){
+    public boolean isServer() {
         return true;
     }
 

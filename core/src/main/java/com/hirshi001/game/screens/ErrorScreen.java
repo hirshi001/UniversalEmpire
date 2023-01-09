@@ -1,5 +1,6 @@
 package com.hirshi001.game.screens;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -12,6 +13,8 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.game.widgets.GameTextFieldStyle;
+
+import java.util.Arrays;
 
 import static com.hirshi001.game.Util.*;
 
@@ -39,13 +42,12 @@ public class ErrorScreen extends GameScreen {
         TextureRegion border = new TextureRegion((Texture) GameApp.Game().gameResources.get(BORDER_TEXTURE));
         TextureRegion background = new TextureRegion((Texture) GameApp.Game().gameResources.get(BACKGROUND_TEXTURE));
         BitmapFont font = GameApp.Game().gameResources.get(FONT);
-        TextArea textArea = new TextArea(cause.toString(), new GameTextFieldStyle(500, 500, 5, border, background, font));
+        TextArea textArea = new TextArea(cause.toString()+"\n"+ Arrays.toString(cause.getStackTrace()), new GameTextFieldStyle(500, 500, 5, border, background, font));
         textArea.setAlignment(Align.center);
         table.add(textArea).expand().fill();
 
         stage.addActor(table);
-
-        cause.printStackTrace();
+        Gdx.app.log("Error Screen", "Error Screen Created", cause);
     }
 
     @Override

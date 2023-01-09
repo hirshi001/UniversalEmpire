@@ -28,16 +28,15 @@ public class ByteCounterPacketEncoderDecoder implements PacketEncoderDecoder {
         int startIndex = in.readerIndex();
         PacketHandlerContext<?> ctx = encoderDecoder.decode(container, in, context);
         if(ctx==null) return null;
-        if(ctx.packetType==PacketType.TCP) decodedBytes.addAndGet(in.readerIndex() - startIndex);
+        decodedBytes.addAndGet(in.readerIndex() - startIndex);
         return ctx;
     }
 
     @Override
     public void encode(PacketHandlerContext ctx, DataPacket dataPacket, PacketRegistryContainer container, ByteBuffer out) {
-        if(ctx.packetType==PacketType.UDP && Math.random()<1D) return; // emulate sending a bad packet
         int startIndex = out.writerIndex();
         encoderDecoder.encode(ctx, dataPacket, container, out);
         encodedBytes.addAndGet(out.writerIndex() - startIndex);
-        maxPacketSize.getAndUpdate(x -> Math.max(x, out.writerIndex() - startIndex));
+        // maxPacketSize.getAndUpdate(x -> Math.max(x, out.writerIndex() - startIndex));
     }
 }

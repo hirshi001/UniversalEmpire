@@ -1,1 +1,2 @@
-include 'shared', 'server', 'core', 'lwjgl3'
+include 'shared', 'server', 'core', 'lwjgl3', 'html'
+

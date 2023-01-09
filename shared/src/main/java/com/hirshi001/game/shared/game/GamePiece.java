@@ -120,4 +120,8 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
         return properties;
     }
 
+    public boolean shouldLoadChunk(){
+        return false;
+    }
+
 }

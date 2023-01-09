@@ -37,7 +37,5 @@ public class SyncPacket extends Packet {
         tick = in.readLong();
         id = in.readInt();
         buffer = in.readBytes(in.readableBytes());
-
-
     }
 }

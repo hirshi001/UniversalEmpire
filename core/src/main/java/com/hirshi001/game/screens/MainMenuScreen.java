@@ -49,7 +49,7 @@ public class MainMenuScreen extends GameScreen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 ConnectingScreen connectingScreen =  new ConnectingScreen(app);
-                connectingScreen.connect(ipField.getText());
+                // connectingScreen.connect(ipField.getText());
                 app.setScreen(connectingScreen);
             }
         });

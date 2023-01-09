@@ -6,15 +6,20 @@ import com.badlogic.gdx.assets.AssetLoaderParameters;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.AssetLoader;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 public class GameResources {
@@ -46,9 +51,10 @@ public class GameResources {
             try {
                 clazz = getClass(type);
                 assetManager.load(path, clazz);
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-                return;
+            } catch (Exception e) {
+                Gdx.app.error("GameResources", "Failed to load resource: " + path + " of type: " + type);
+                // e.printStackTrace();
+                // return;
             }
         }
 
@@ -106,8 +112,20 @@ public class GameResources {
         return assetManager;
     }
 
-    private Class<?> getClass(String name) throws ClassNotFoundException {
-        return Class.forName(name);
+    private Class<?> getClass(String name) throws ReflectionException {
+        if(name.equals("com.badlogic.gdx.graphics.Texture")){
+            return Texture.class;
+        }
+        if(name.equals("com.badlogic.gdx.audio.Music")){
+            return Music.class;
+        }
+        if(name.equals("com.badlogic.gdx.audio.Sound")){
+            return Sound.class;
+        }
+        if(name.equals("com.badlogic.gdx.graphics.g2d.BitmapFont")){
+            return BitmapFont.class;
+        }
+        return ClassReflection.forName(name);
     }
 
 }

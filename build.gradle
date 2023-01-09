@@ -11,6 +11,7 @@ buildscript {
 		maven { url 'https://jitpack.io' }
 	}
 	dependencies {
+		classpath "org.wisepersist:gwt-gradle-plugin:$gwtPluginVersion"
 
 
 		// This follows advice from https://blog.gradle.org/log4j-vulnerability
@@ -33,7 +34,7 @@ allprojects {
 
 configure(subprojects) {
 	apply plugin: 'java-library'
-	sourceCompatibility = JavaVersion.VERSION_16
+	sourceCompatibility = 8
 	compileJava {
 		options.incremental = true
 	}
@@ -53,7 +54,7 @@ configure(subprojects) {
 }
 
 subprojects {
-	version = '0.0.1'
+	version = '0.0.2'
 	ext.appName = 'UniversalEmpire'
 	repositories {
 		mavenCentral()

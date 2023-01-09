@@ -6,7 +6,8 @@ eclipse.project.name = appName + '-server'
 
 dependencies {
 
-	implementation "com.github.hirshi001:javanetworkinglibrary:$javaNetworkingLibraryVersion"
+	implementation "com.github.hirshi001:javanetworkinglibrary:$javaNetworkingVersion"
+	implementation "com.github.hirshi001:WebsocketNetworkingServer:$websocketNetworkingServerVersion"
 	implementation project(':shared')
 }
 

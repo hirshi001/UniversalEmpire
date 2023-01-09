@@ -2,6 +2,7 @@ package com.hirshi001.game;
 
 import com.badlogic.gdx.math.Vector2;
 import com.hirshi001.game.render.ActorMap;
+import com.hirshi001.game.shared.entities.Player;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.game.GamePiece;
@@ -24,6 +25,8 @@ public class ClientField extends Field {
 
     private final Vector2 position = new Vector2();
 
+    public int playerId;
+
     public Vector2 getPosition() {
         return position;
     }
@@ -33,22 +36,25 @@ public class ClientField extends Field {
         this.client = client;
     }
 
+    public Player getPlayer() {
+        return (Player) getGamePiece(playerId);
+    }
+
     @Override
     protected void add0(GamePiece gamePiece, int i) {
         super.add0(gamePiece, i);
-        System.out.println("GamePiece added: " + gamePiece.getGameId());
         gamePiece.userData = ActorMap.get(gamePiece);
     }
 
     @Override
     public Chunk loadChunk(int x, int y) {
-        if(containsChunk(x, y)){
+        if (containsChunk(x, y)) {
             return getChunk(x, y);
         }
         HashedPoint point = new HashedPoint(x, y);
-        if(chunkLastRequested.containsKey(point)){
+        if (chunkLastRequested.containsKey(point)) {
             long lastRequestTime = chunkLastRequested.get(point);
-            if(System.currentTimeMillis() - lastRequestTime < TimeUnit.SECONDS.toMillis(1)){
+            if (System.currentTimeMillis() - lastRequestTime < TimeUnit.SECONDS.toMillis(1)) {
                 return null;
             }
         }
@@ -59,7 +65,7 @@ public class ClientField extends Field {
 
     @Override
     public Chunk addChunk(Chunk chunk) {
-        if(chunk==null) return null;
+        if (chunk == null) return null;
         chunkLastRequested.remove(chunk.chunkPosition);
         return super.addChunk(chunk);
     }
@@ -70,20 +76,20 @@ public class ClientField extends Field {
         Vector2 position = getPosition();
         Point chunkP = getChunkPosition(position.x, position.y);
         int s = 2;
-        for(int i=-s;i<=s;i++){
-            for(int j=-s;j<=s;j++){
+        for (int i = -s; i <= s; i++) {
+            for (int j = -s; j <= s; j++) {
                 Chunk chunk = addChunk(chunkP.x + i, chunkP.y + j);
-                if(chunk!=null){
+                if (chunk != null) {
                     chunkLife.put(chunk, 0L);
                 }
             }
         }
-        for(Chunk chunk:chunks.values()){
+        for (Chunk chunk : chunks.values()) {
             chunkLife.putIfAbsent(chunk, 0L);
         }
         chunkLife.replaceAll((chunk, life) -> life + 1);
         chunkLife.entrySet().removeIf(entry -> {
-            if(entry.getValue() > 20){
+            if (entry.getValue() > 20) {
                 removeChunk(entry.getKey().getChunkX(), entry.getKey().getChunkY());
                 return true;
             }

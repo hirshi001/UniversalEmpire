@@ -14,6 +14,7 @@ public class PlayerData {
     public Player player;
     public Field field;
     public Channel channel;
+    public boolean hasShot;
 
     public Set<Point> trackedChunks = Collections.synchronizedSet(new HashSet<>());
     public Set<Point> softTrackedChunks = Collections.synchronizedSet(new HashSet<>());

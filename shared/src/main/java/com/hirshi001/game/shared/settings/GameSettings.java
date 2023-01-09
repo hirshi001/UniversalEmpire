@@ -28,6 +28,7 @@ public class GameSettings {
         MANAGER.register(Float.class, new FloatSerializer(), 6);
         MANAGER.register(LinePath.class, new PathSerializer(), 7);
         MANAGER.register(String.class, new StringSerializer(), 8);
+        MANAGER.register(Vector2.class, new VectorSerializer(), 9);
     }
 
 

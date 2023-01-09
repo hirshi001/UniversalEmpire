@@ -24,16 +24,16 @@ public class PlayerActor extends GamePieceActor<Player>{
     public void render(SpriteBatch batch, float delta) {
         gamePiece.bounds.getPosition(position);
         float dst = position.dst(displayPosition);
-        if(dst > 1f){
+        if(dst > 3F){
             displayPosition.set(position);
-        }else {
-            displayPosition.interpolate(position, 0.1F, Interpolation.linear);
+        }else if(dst > 0.05f){
+            displayPosition.interpolate(position, 0.5F, Interpolation.linear);
         }
         time+=delta;
         TextureRegion region = animation.getKeyFrame(time, true);
         if(region!=null) {
-            float x = gamePiece.getCenterX() - 1F;
-            float y = gamePiece.getCenterY() - 1F;
+            float x = displayPosition.x + gamePiece.bounds.width/2F - 1F;
+            float y = displayPosition.y + gamePiece.bounds.height/2F- 1F;
             batch.draw(region, x, y, 2F, 2F);
         }
     }

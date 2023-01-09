@@ -49,7 +49,6 @@ public class FirstScreen extends GameScreen {
 	public void render(float delta) {
 		// Draw your screen here. "delta" is the time since last render in seconds.
 		// batch.enableBlending();
-		batch.begin();
 		ScreenUtils.clear(Color.WHITE);
 
 		if(!isWaiting){
@@ -67,12 +66,16 @@ public class FirstScreen extends GameScreen {
 		if(isWaiting && app.gameResources.isFinished()){
 			//app.setScreen(new MainMenuScreen(app));
 			ConnectingScreen connectingScreen = new ConnectingScreen(app);
-			connectingScreen.connect("localhost");
+			Gdx.app.log("About to connect to server:", app.ip+":"+app.port);
+			connectingScreen.connect(GameApp.Game().ip, GameApp.Game().port); // 54.219.108.146
 			app.setScreen(connectingScreen);
 		}
-		titleSprite.draw(batch);
+		else {
+			batch.begin();
+			titleSprite.draw(batch);
+			batch.end();
+		}
 
-		batch.end();
 	}
 
 	@Override

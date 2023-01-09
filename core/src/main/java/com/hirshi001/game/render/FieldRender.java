@@ -8,35 +8,29 @@ import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.dongbat.jbump.CollisionFilter;
-import com.dongbat.jbump.Item;
 import com.hirshi001.game.ClientField;
 import com.hirshi001.game.render.tilerenderers.TileRenderers;
+import com.hirshi001.game.shared.entities.Player;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.game.GamePiece;
 import com.hirshi001.game.shared.tiles.Tile;
-import com.hirshi001.game.shared.util.props.Properties;
-import com.hirshi001.game.widgets.GameTextField;
 import com.hirshi001.game.widgets.PropertiesTextArea;
 
-import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class FieldRender extends InputAdapter{
 
     SpriteBatch batch;
-    OrthographicCamera camera;
+    public OrthographicCamera camera;
     ExtendViewport viewport;
     Field field;
     ShapeRenderer renderer;
@@ -79,8 +73,8 @@ public class FieldRender extends InputAdapter{
             renderer.rect(chunk.getBounds().x, chunk.getBounds().y, chunk.getBounds().width, chunk.getBounds().height);
         }
 
-        renderer.setColor(Color.BLUE);
         for(GamePiece piece: field.getItems()){
+            renderer.setColor(Color.BLUE);
             if(piece.userData instanceof GamePieceActor){
                 ((GamePieceActor)piece.userData).debugRender(renderer);
             }else{
@@ -90,7 +84,19 @@ public class FieldRender extends InputAdapter{
         renderer.end();
     }
 
+    Vector3 target = new Vector3();
     public void render(float delta){
+
+
+        ClientField cf = (ClientField) field;
+        Player player = cf.getPlayer();
+        if(player!=null){
+            cf.getPosition().set(player.getCenterX(), player.getCenterY());
+
+            target.set(player.getCenterX(), player.getCenterY(), 0);
+            camera.position.interpolate(target, 0.1F, Interpolation.linear);
+            camera.update();
+        }
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
@@ -153,10 +159,9 @@ public class FieldRender extends InputAdapter{
             float y = Math.min(startDrag.y, endDrag.y);
             float w = Math.abs(startDrag.x - endDrag.x);
             float h = Math.abs(startDrag.y - endDrag.y);
-            System.out.println(x + " " + y + " " + w + " " + h);
 
-            Gdx.gl.glEnable(GL30.GL_BLEND);
-            Gdx.gl.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
+            // Gdx.gl.glEnable(GL30.GL_BLEND);
+            // Gdx.gl.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
 
             renderer.setProjectionMatrix(camera.combined);
             renderer.setAutoShapeType(true);
@@ -219,7 +224,6 @@ public class FieldRender extends InputAdapter{
     @Override
     public boolean scrolled(float amountX, float amountY) {
         camera.zoom += amountY/100F;
-        System.out.println(camera.zoom);
         camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 5f);
         camera.update();
         return true;
@@ -228,44 +232,54 @@ public class FieldRender extends InputAdapter{
     boolean dragging = false;
     Vector3 startDrag = new Vector3();
     Vector3 endDrag = new Vector3();
+    int dragPointer = -1;
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        camera.unproject(startDrag.set(screenX, screenY, 0));
-        endDrag.set(startDrag);
-        return true;
+        if(button == Input.Buttons.RIGHT){
+            dragPointer = pointer;
+            System.out.println("Drag start " + dragPointer);
+            camera.unproject(startDrag.set(screenX, screenY, 0));
+            endDrag.set(startDrag);
+            return true;
+        }
+        return false;
     }
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        camera.unproject(endDrag.set(screenX, screenY, 0));
-        dragging = true;
+        if(dragPointer!=-1) {
+            camera.unproject(endDrag.set(screenX, screenY, 0));
+            dragging = true;
+        }
         return true;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        ArrayList<GamePiece> items = new ArrayList<>();
-        if(dragging){
+        if(button==Input.Buttons.RIGHT){
+            dragPointer = -1;
+            ArrayList<GamePiece> items = new ArrayList<>();
+            if (dragging) {
+                float x = Math.min(startDrag.x, endDrag.x);
+                float y = Math.min(startDrag.y, endDrag.y);
+                float w = Math.abs(startDrag.x - endDrag.x);
+                float h = Math.abs(startDrag.y - endDrag.y);
 
-            float x = Math.min(startDrag.x, endDrag.x);
-            float y = Math.min(startDrag.y, endDrag.y);
-            float w = Math.abs(startDrag.x - endDrag.x);
-            float h = Math.abs(startDrag.y - endDrag.y);
+                field.queryRect(x, y, w, h, null, items);
+                dragging = false;
+            } else {
+                Vector3 pos = new Vector3(screenX, screenY, 0);
+                camera.unproject(pos);
+                field.queryPoint(pos.x, pos.y, null, items);
 
-            field.queryRect(x, y, w, h, null, items);
-            dragging = false;
-        }else{
-            Vector3 pos = new Vector3(screenX, screenY, 0);
-            camera.unproject(pos);
-            field.queryPoint(pos.x, pos.y, null, items);
-        }
+            }
 
-        if(!items.isEmpty()){
             synchronized (selectedItems) {
                 selectedItems.clear();
                 selectedItems.addAll(items);
             }
+
         }
 
         return true;
