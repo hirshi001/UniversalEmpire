@@ -1,0 +1,132 @@
+
+GameElementsAtlas.png
+size: 2048, 1024
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+entities/bullet/Bullet
+  rotate: false
+  xy: 2, 88
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+entities/knight/woodKnight1
+  rotate: false
+  xy: 132, 150
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+entities/knight/woodKnight2
+  rotate: false
+  xy: 1030, 664
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+entities/knight/woodKnight3
+  rotate: false
+  xy: 1030, 698
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+entities/knight/woodKnight4
+  rotate: false
+  xy: 2, 20
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+entities/knight/woodKnight5
+  rotate: false
+  xy: 2, 54
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+entities/knight/woodKnight6
+  rotate: false
+  xy: 166, 184
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+entities/knight/woodKnight7
+  rotate: false
+  xy: 1064, 698
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+entities/player/player-1
+  rotate: false
+  xy: 36, 54
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+entities/player/player-2
+  rotate: false
+  xy: 132, 184
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+opensans-16
+  rotate: false
+  xy: 516, 218
+  size: 512, 512
+  orig: 512, 512
+  offset: 0, 0
+  index: -1
+opensans-64
+  rotate: false
+  xy: 2, 218
+  size: 512, 512
+  orig: 512, 512
+  offset: 0, 0
+  index: -1
+opensans-32
+  rotate: false
+  xy: 2, 218
+  size: 512, 512
+  orig: 512, 512
+  offset: 0, 0
+  index: -1
+tiles/grass
+  rotate: false
+  xy: 36, 36
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+tiles/ground
+  rotate: false
+  xy: 1030, 646
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+tiles/snow
+  rotate: false
+  xy: 1098, 714
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+tiles/wall
+  rotate: false
+  xy: 2, 2
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+tiles/water
+  rotate: false
+  xy: 1064, 680
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1

@@ -103,10 +103,12 @@ public class FieldRender extends InputAdapter{
         drawTiles(delta);
         drawItems(delta);
         batch.end();
+        // debugRender();
 
         drawSelection(delta);
 
         drawProperties(delta);
+
 
     }
 
@@ -133,6 +135,9 @@ public class FieldRender extends InputAdapter{
             if(tiles==null) continue;
             for(int x = 0; x < tiles.length; x++){
                 for(int y = 0; y < tiles[x].length; y++){
+
+                    TileRenderers.DEFAULT.render(batch, field, x + dx, y + dy);
+                    if(true) continue;
                     if(tiles[x][y] != null){
                         TileRenderers.TILE_RENDERERS.get(tiles[x][y].getID()).render(batch, field, x + dx, y + dy);
                     }else{

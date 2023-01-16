@@ -7,21 +7,21 @@ import com.dongbat.jbump.Item;
 import com.dongbat.jbump.Response;
 import com.hirshi001.buffer.buffers.ByteBuffer;
 import com.hirshi001.game.shared.game.Field;
+import com.hirshi001.game.shared.game.GamePiece;
 import com.hirshi001.game.shared.settings.GameSettings;
 
 public class Fireball extends Entity {
 
     protected LinePath.LinePathParam pathParam = new LinePath.LinePathParam();
-    private static final CollisionFilter filter = new CollisionFilter() {
-        @Override
-        public Response filter(Item item, Item other) {
-            if(!(other instanceof Player)) return null;
-            Player player = (Player) other;
+    private static final CollisionFilter filter = (item, other) -> {
 
-            int id = ((Fireball) item).getProperties().get("ownId", -1);
-            if(id==player.getGameId()) return null;
-            return Response.touch;
-        }
+        GamePiece piece = (GamePiece) other;
+        if (!piece.worldInteractable() || !piece.collides()) return null;
+
+        int id = piece.getProperties().get("ownId", -1);
+        if (id == piece.getGameId()) return null;
+
+        return Response.touch;
     };
 
     public Fireball() {
@@ -36,71 +36,72 @@ public class Fireball extends Entity {
         super.setField(field);
     }
 
-    float time=0F;
+    float time = 0F;
 
     @Override
     public void tick(float delta) {
         super.tick(delta);
         Number radius = getProperties().get("radius", 0.5F);
-        if(bounds.width!=radius.floatValue() || bounds.height!=radius.floatValue()){
+        if (bounds.width != radius.floatValue() || bounds.height != radius.floatValue()) {
             bounds.setSize(radius.floatValue(), radius.floatValue());
             update();
         }
 
 
         Number angle = getProperties().get("angle");
-        if(angle!=null) {
+        if (angle != null) {
             Number speed = getProperties().get("speed", 10F);
             float dx = (float) (Math.cos(angle.doubleValue()) * speed.floatValue() * delta);
             float dy = (float) (Math.sin(angle.doubleValue()) * speed.floatValue() * delta);
 
-            Response.Result result = field.move(this, bounds.x + dx, bounds.y + dy, filter);
+            Response.Result result = field.move(this, bounds.x + dx, bounds.y + dy, getCollisionFilter());
             bounds.x = result.goalX;
             bounds.y = result.goalY;
 
-            Collisions collisions = result.projectedCollisions;
-            if(collisions.size()>0 && field.isServer()) {
-                System.out.println("Removed Fireball");
-                field.removeGamePiece(this);
-                Item item = collisions.get(0).other;
-                if(item instanceof Player){
-                    Player player = (Player) item;
-                    player.getProperties().update("health", (health)->((Number)health).floatValue()-10F);
+            if (field.isServer()) {
+                Collisions collisions = result.projectedCollisions;
+                if (collisions.size() > 0 && field.isServer()) {
+                    field.removeGamePiece(this);
+                    collisions.sort();
+                    Item item = collisions.get(0).other;
+                    if (item instanceof LivingEntity) {
+                        LivingEntity entity = (LivingEntity) item;
+                        entity.damage(10F);
+                    }
                 }
             }
         }
 
-        if(field.isServer()){
-            time+=delta;
+        if (field.isServer()) {
+            time += delta;
             Number maxTime = getProperties().get("maxTime");
-            if(maxTime!=null && time>=maxTime.floatValue()){
+            if (maxTime != null && time >= maxTime.floatValue()) {
                 field.removeGamePiece(this);
             }
         }
-
     }
 
-    public void setSpeed(float speed){
+    public void setSpeed(float speed) {
         getProperties().put("speed", speed);
     }
 
-    public void setAngle(float angle){
-        getProperties().put("angle",  angle);
+    public void setAngle(float angle) {
+        getProperties().put("angle", angle);
     }
 
-    public void maxTime(float time){
-        getProperties().put("maxTime",  time);
+    public void maxTime(float time) {
+        getProperties().put("maxTime", time);
     }
 
-    public void setOwnerId(int id){
+    public void setOwnerId(int id) {
         getProperties().put("ownId", id);
     }
 
     public void setRadius(float radius) {
         getProperties().put("r", radius);
-        GameSettings.runnablePoster.postRunnable(()->{
+        GameSettings.runnablePoster.postRunnable(() -> {
             float r = getProperties().get("r", 1F);
-            bounds.setSize(r*2, r*2);
+            bounds.setSize(r * 2, r * 2);
             update();
         });
     }
@@ -131,4 +132,21 @@ public class Fireball extends Entity {
     public boolean shouldLoadChunk() {
         return true;
     }
+
+    @Override
+    public CollisionFilter getCollisionFilter() {
+        return filter;
+    }
+
+    @Override
+    public boolean isProjectile() {
+        return true;
+    }
+
+    @Override
+    public boolean collides() {
+        return false;
+    }
+
+
 }

@@ -19,8 +19,10 @@ import com.hirshi001.game.shared.packets.*;
 import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.networking.network.channel.Channel;
+import com.hirshi001.networking.network.client.Client;
 import com.hirshi001.networking.packet.DataPacket;
 import com.hirshi001.networking.packethandlercontext.PacketHandlerContext;
+import com.hirshi001.networking.packethandlercontext.PacketType;
 
 public class MainGameScreen extends GameScreen {
 
@@ -33,7 +35,7 @@ public class MainGameScreen extends GameScreen {
         Gdx.app.log("MainGameScreen", "Created");
 
         Tiles.register();
-        TileRenderers.register(app);
+        TileRenderers.register();
 
         GamePieces.register();
         ActorMap.register();
@@ -125,23 +127,43 @@ public class MainGameScreen extends GameScreen {
         Gdx.input.setInputProcessor(multiplexer);
     }
 
+    float time;
     @Override
     public void render(float delta) {
+        // send a ping packet every second
+        time += delta;
+        if (time > 1) {
+            time = 0;
+            app.client.getChannel().sendWithResponse(new PingPacket(System.currentTimeMillis()), null, PacketType.TCP, 1000).then(ctx->{
+                long dt = System.currentTimeMillis() - ((PingPacket)ctx.packet).time;
+                float ping = dt/1000f;
+                Gdx.app.log("MainGameScreen", "Ping: "+ ping);
+            }).performAsync();
+        }
+
+
+        {
+            Client client = GameApp.Game().client;
+            if (client != null) {
+                client.getChannel().flushTCP();
+            }
+        }
 
         if(!playerAngle.isZero()){
             playerAngle.nor();
             Player player = app.field.getPlayer();
             if(player!=null){
-                Number speed = player.getProperties().get("speed", 3F);
+                Number speed = player.getProperties().<Number>get("speed", 3F);
                 float d = speed.floatValue()*delta;
+                player.getProperties().put("d", d);
                 player.bounds.x += playerAngle.x * d;
                 player.bounds.y += playerAngle.y * d;
                 player.update();
 
-                PlayerMovePacket packet = new PlayerMovePacket(player.bounds.x, player.bounds.y, player.getGameId(), app.field.tick);
+                PlayerMovePacket packet = new PlayerMovePacket(player.bounds.x, player.bounds.y, player.getGameId(), app.field.time);
                 Channel channel = GameApp.Game().client.getChannel();
-                channel.sendTCP(packet, null).perform();
-                if(channel.supportsUDP()) channel.sendUDP(packet, null).perform();
+                if(channel.supportsUDP()) channel.sendNow(packet, null, PacketType.UDP);
+                else channel.sendDeferred(packet, null, PacketType.TCP);
             }
         }
 
@@ -152,7 +174,7 @@ public class MainGameScreen extends GameScreen {
             Player player = app.field.getPlayer();
             if (player != null) {
                 float angle = (float) Math.atan2(worldCoords.y - player.getCenterY(), worldCoords.x - player.getCenterX());
-                app.client.getChannel().sendTCP(new ShootPacket(angle), null).perform();
+                app.client.getChannel().sendNow(new ShootPacket(angle), null, PacketType.TCP);
             }
         }
 
@@ -162,6 +184,12 @@ public class MainGameScreen extends GameScreen {
         // fieldRender.getUserInput(delta);
         fieldRender.render(delta);
         // fieldRender.debugRender();
+        {
+            Client client = GameApp.Game().client;
+            if (client != null) {
+                client.getChannel().flushTCP();
+            }
+        }
 
     }
 

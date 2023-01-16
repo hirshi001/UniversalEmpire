@@ -37,6 +37,7 @@ public class Properties implements ByteBufSerializable, Iterable<String> {
 
     public void put(String key, int id, Object value){
         name_id_map.put(key, id);
+        id_name_map.register(new ObjectHolder<>(key), id);
         properties.put(key, value);
         modifiedProperties.add(key);
     }

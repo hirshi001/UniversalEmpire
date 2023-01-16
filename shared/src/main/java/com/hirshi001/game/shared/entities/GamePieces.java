@@ -19,12 +19,14 @@ public class GamePieces {
     public static ObjectHolderSupplier<Player> PLAYER;
     public static ObjectHolderSupplier<TestGamePiece> TEST_GAME_PIECE;
     public static ObjectHolderSupplier<Fireball> FIREBALL;
+    public static ObjectHolderSupplier<Knight> KNIGHT;
 
     public static void register(){
         CIRCLE_GAME_PIECE = register(CircleGamePiece.class, CircleGamePiece::new, 0);
         PLAYER = register(Player.class, Player::new, 1);
         TEST_GAME_PIECE = register(TestGamePiece.class, TestGamePiece::new, 2);
         FIREBALL = register(Fireball.class, Fireball::new, 3);
+        KNIGHT = register(Knight.class, Knight::new, 4);
     }
 
     private static <T extends GamePiece> ObjectHolderSupplier register(Class<T> clazz, Supplier<T> entitySupplier, int id){

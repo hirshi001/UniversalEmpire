@@ -1,82 +1,78 @@
 package com.hirshi001.game.screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.NinePatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Value;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FillViewport;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.hirshi001.game.GameApp;
-import com.hirshi001.game.widgets.GameButton;
-import com.hirshi001.game.widgets.GameTextField;
 
 public class MainMenuScreen extends GameScreen {
 
+    TextButton createAccountButton, loginButton;
+    Texture ninePatchTexture;
+    Texture bitmapFontTexture;
+
     Stage stage;
-    GameTextField ipField;
-    GameButton startButton;
-    GameButton exitButton;
 
     public MainMenuScreen(GameApp gameApp) {
         super(gameApp);
+        this.ninePatchTexture = new Texture("resources/MenuScreens/Buttons.png");
+        bitmapFontTexture = new Texture("resources/MenuScreens/opensans-16.png");
+        stage = new Stage(new FillViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
     }
 
     @Override
     public void show() {
+        super.show();
+        NinePatch ninePatch = new NinePatch(ninePatchTexture, 10, 10, 10, 10);
+        NinePatchDrawable drawable = new NinePatchDrawable(ninePatch);
+        BitmapFont font = new BitmapFont(Gdx.files.internal("resources/MenuScreens/opensans-16.fnt"), new TextureRegion(bitmapFontTexture));
 
-        stage = new Stage(new FitViewport(1000, 1000));
-        stage.setDebugAll(true);
-
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle(drawable, drawable, drawable, font);
 
         Table table = new Table();
+
+        Value width = Value.percentWidth(0.8F, table);
+        createAccountButton = new TextButton("Create Account", style);
+        createAccountButton.setTransform(true);
+        table.add(createAccountButton).minWidth(width).fill();
+
+        table.row().padTop(20);
+
+        loginButton = new TextButton("Login to Existing Account", style);
+        loginButton.setTransform(true);
+        table.add(loginButton).minWidth(width).fill();
+
         table.setFillParent(true);
-
-        ipField = new GameTextField(750, 200, 25, "");
-        ipField.setMessageText("Enter IP Address");
-        ipField.setAlignment(Align.center);
-        table.add(ipField).width(750F).height(100F);
-
-
-        startButton = new GameButton(750, 200, 25, "start");
-        startButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                ConnectingScreen connectingScreen =  new ConnectingScreen(app);
-                // connectingScreen.connect(ipField.getText());
-                app.setScreen(connectingScreen);
-            }
-        });
-
-        table.row();
-        table.add(startButton).width(750F).height(100F).padTop(100F);
-
-        exitButton = new GameButton(750, 200, 25, "exit");
-        exitButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                Gdx.app.exit();
-            }
-        });
-        table.row();
-        table.add(exitButton).width(750F).height(100F).padTop(100F);
-
+        table.setTransform(true);
         stage.addActor(table);
+        stage.setDebugAll(true);
         Gdx.input.setInputProcessor(stage);
 
+
+
+        createAccountButton.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                app.setScreen(new CreateAccountScreen(app));
+            }
+        });
     }
 
     @Override
     public void render(float delta) {
-        ScreenUtils.clear(Color.GREEN);
-
-        //stage.act(delta);
+        super.render(delta);
+        stage.act(delta);
         stage.draw();
 
     }
@@ -87,23 +83,10 @@ public class MainMenuScreen extends GameScreen {
     }
 
     @Override
-    public void pause() {
-
-    }
-
-    @Override
-    public void resume() {
-
-    }
-
-    @Override
-    public void hide() {
-        dispose();
-    }
-
-    @Override
     public void dispose() {
-        stage.dispose();
+        super.dispose();
+        bitmapFontTexture.dispose();
+        ninePatchTexture.dispose();
+
     }
 }
-

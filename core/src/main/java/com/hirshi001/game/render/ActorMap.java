@@ -2,6 +2,7 @@ package com.hirshi001.game.render;
 
 import com.hirshi001.game.shared.entities.CircleGamePiece;
 import com.hirshi001.game.shared.entities.Fireball;
+import com.hirshi001.game.shared.entities.Knight;
 import com.hirshi001.game.shared.entities.Player;
 import com.hirshi001.game.shared.game.GamePiece;
 
@@ -16,6 +17,7 @@ public class ActorMap {
         register(Player.class, PlayerActor::new);
         register(Fireball.class, FireballActor::new);
         register(CircleGamePiece.class, CircleGamePieceActor::new);
+        register(Knight.class, KnightActor::new);
     }
 
     public static <T extends GamePiece> void register(Class<T> clazz, GamePieceActorSupplier<T> supplier){

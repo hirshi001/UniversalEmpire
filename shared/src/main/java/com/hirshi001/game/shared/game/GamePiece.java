@@ -28,17 +28,17 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
     public static final CollisionFilter DEFAULT_COLLISION_FILTER = (item, other) -> {
         GamePiece gamePiece = (GamePiece) item;
         GamePiece otherGamePiece = (GamePiece) other;
-        if(!gamePiece.worldInteractable() || !otherGamePiece.worldInteractable()){
+        if (!gamePiece.worldInteractable() || !otherGamePiece.worldInteractable()) {
             return null;
         }
-        if(gamePiece.isStatic() || otherGamePiece.isStatic()){
+        if (gamePiece.isStatic() || otherGamePiece.isStatic()) {
             return Response.slide;
         }
         return Response.cross;
     };
-    
 
-    public GamePiece(){
+
+    public GamePiece() {
         bounds = new Rectangle();
         setID(GamePieces.getId(this));
     }
@@ -47,7 +47,7 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
     }
 
 
-    public void setField(Field field){
+    public void setField(Field field) {
         this.field = field;
         this.alive = true;
     }
@@ -70,26 +70,30 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
         this.gameId = gameId;
     }
 
-    public float getCenterX(){
+    public float getCenterX() {
         return bounds.x + bounds.width / 2;
     }
 
-    public float getCenterY(){
+    public float getCenterY() {
         return bounds.y + bounds.height / 2;
     }
 
     public abstract boolean isStatic();
 
-    public boolean worldInteractable(){
+    public boolean worldInteractable() {
         return true;
     }
 
-    public CollisionFilter getCollisionFilter(){
+    public CollisionFilter getCollisionFilter() {
         return DEFAULT_COLLISION_FILTER;
     }
 
-    public void update(){
-        if(worldInteractable() && field!=null) field.update(this, bounds.x, bounds.y, bounds.width, bounds.height);
+    public void update() {
+        if (worldInteractable() && field != null) field.update(this, bounds.x, bounds.y, bounds.width, bounds.height);
+    }
+
+    public boolean collides() {
+        return true;
     }
 
     @Override
@@ -106,21 +110,21 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
         properties.readBytes(buffer);
     }
 
-    public void writeSyncBytes(ByteBuffer buffer){
+    public void writeSyncBytes(ByteBuffer buffer) {
         buffer.writeFloat(bounds.x);
         buffer.writeFloat(bounds.y);
     }
 
-    public void readSyncBytes(ByteBuffer buffer){
+    public void readSyncBytes(ByteBuffer buffer) {
         bounds.x = buffer.readFloat();
         bounds.y = buffer.readFloat();
     }
 
-    public Properties getProperties(){
+    public Properties getProperties() {
         return properties;
     }
 
-    public boolean shouldLoadChunk(){
+    public boolean shouldLoadChunk() {
         return false;
     }
 

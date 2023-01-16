@@ -14,6 +14,7 @@ import com.hirshi001.networking.network.client.Client;
 import com.hirshi001.networking.networkdata.DefaultNetworkData;
 import com.hirshi001.networking.networkdata.NetworkData;
 import com.hirshi001.networking.packethandlercontext.PacketHandlerContext;
+import com.hirshi001.networking.packethandlercontext.PacketType;
 import com.hirshi001.networking.packetregistrycontainer.PacketRegistryContainer;
 import com.hirshi001.networking.packetregistrycontainer.SinglePacketRegistryContainer;
 import com.hirshi001.restapi.RestFuture;
@@ -53,7 +54,7 @@ public class ConnectingScreen extends GameScreen {
             Gdx.app.log("ConnectingScreen", "Creating client");
             GameApp.Game().client = client = app.networkFactory.createClient(networkData, app.bufferFactory, ip, port);
             client.setChannelInitializer(channel -> {
-                channel.setChannelOption(ChannelOption.TCP_AUTO_FLUSH, true);
+                // channel.setChannelOption(ChannelOption.TCP_AUTO_FLUSH, true);
                 channel.setChannelOption(ChannelOption.UDP_AUTO_FLUSH, true);
                 channel.setChannelOption(ChannelOption.DEFAULT_SWITCH_PROTOCOL, true);
             });
@@ -75,12 +76,10 @@ public class ConnectingScreen extends GameScreen {
 
                 @Override
                 public void onSent(PacketHandlerContext<?> context) {
-                   Gdx.app.log("ClientListener", "Sent packet: " + context.packet);
                 }
 
                 @Override
                 public void onReceived(PacketHandlerContext<?> context) {
-                    Gdx.app.log("ClientListener", "Received packet: " + context.packet);
                 }
             });
 

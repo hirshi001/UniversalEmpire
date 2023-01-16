@@ -4,6 +4,7 @@ import com.badlogic.gdx.utils.Array;
 import com.hirshi001.buffer.bufferfactory.BufferFactory;
 import com.hirshi001.buffer.bufferfactory.DefaultBufferFactory;
 import com.hirshi001.game.shared.entities.GamePieces;
+import com.hirshi001.game.shared.entities.Knight;
 import com.hirshi001.game.shared.entities.Player;
 import com.hirshi001.game.shared.entities.TestGamePiece;
 import com.hirshi001.game.shared.game.Chunk;
@@ -13,7 +14,6 @@ import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.settings.Network;
 import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.shared.tiles.Tiles;
-import com.hirshi001.game.shared.util.ByteCounterPacketEncoderDecoder;
 import com.hirshi001.javanetworking.JavaNetworkFactory;
 import com.hirshi001.javarestapi.JavaRestFutureFactory;
 import com.hirshi001.networking.network.NetworkFactory;
@@ -33,15 +33,13 @@ import com.hirshi001.restapi.ScheduledExec;
 import com.hirshi001.websocketnetworkingserver.WebsocketServer;
 import org.java_websocket.server.DefaultSSLWebSocketServerFactory;
 
-import javax.net.ssl.*;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.security.KeyStore;
-import java.util.Arrays;
-import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -59,18 +57,18 @@ public class ServerLauncher {
     public static ScheduledExecutorService executorService;
     public static final Array<Runnable> runnables = new Array<Runnable>(), executingRunnables = new Array<Runnable>();
 
+    private static String KEYSTORE_PASSWORD;
+
+    private static final Set<Class> watchedPackets = Collections.synchronizedSet(new HashSet<>());
     public static void main(String[] args) throws Exception {
 
         int websocketPort, javaPort;
-        if (args.length >= 1) {
+        if (args.length >= 3) {
 			websocketPort = Integer.parseInt(args[0]);
-        }else{
-            websocketPort = 80;
-        }
-        if (args.length >= 2) {
             javaPort = Integer.parseInt(args[1]);
+            KEYSTORE_PASSWORD = args[2];
         }else{
-            javaPort = 3000;
+            throw new IllegalArgumentException("Not enough arguments");
         }
 
         RestAPI.setFactory(new JavaRestFutureFactory());
@@ -105,9 +103,9 @@ public class ServerLauncher {
                 .register(PropertyNamePacket::new, null, PropertyNamePacket.class, 9)
                 .register(MaintainConnectionPacket::new, null, MaintainConnectionPacket.class, 10)
                 .register(PlayerMovePacket::new, PacketHandlers::handlePlayerMovePacket, PlayerMovePacket.class, 11)
-                .register(PingPacket::new, (ctx) -> {
-                    ctx.channel.send(ctx.packet.setResponsePacket(ctx.packet), null, ctx.packetType).perform();
-                }, PingPacket.class, 12)
+                .register(PingPacket::new,
+                        (ctx) -> ctx.channel.sendNow(ctx.packet.setResponsePacket(ctx.packet), null, ctx.packetType),
+                        PingPacket.class, 12)
                 .register(ShootPacket::new, PacketHandlers::handleShootPacket, ShootPacket.class, 13);
 
 
@@ -137,12 +135,16 @@ public class ServerLauncher {
 
             @Override
             public void onReceived(PacketHandlerContext<?> context) {
-                // System.out.println("Received packet " + context.packet + " from " + context.channel);
+                if(watchedPackets.contains(context.packet.getClass())){
+                    System.out.println("Received packet: " + context.packet + " from " + Arrays.toString(context.channel.getAddress()) + " on " + context.packetType);
+                }
             }
 
             @Override
             public void onSent(PacketHandlerContext<?> context) {
-                // System.out.println("Sent packet " + context.packet + " to " + context.channel);
+                if(watchedPackets.contains(context.packet.getClass())){
+                    System.out.println("Received packet: " + context.packet + " from " + Arrays.toString(context.channel.getAddress()) + " on " + context.packetType);
+                }
             }
         };
 
@@ -185,7 +187,11 @@ public class ServerLauncher {
             }
         }
         field.tick(1F);
-        for(int i=0;i<6;i++) field.addGamePiece(new Player());
+        for(int i=0;i<1;i++) {
+            Knight knight = new Knight();
+            knight.bounds.setPosition(5F, 5F);
+            field.addGamePiece(knight);
+        }
 
         Timer timer = new Timer();
         final long period = TimeUnit.SECONDS.toMillis(1) / GameSettings.TICKS_PER_SECOND;
@@ -228,15 +234,26 @@ public class ServerLauncher {
 
     private static void setSSL(WebsocketServer websocketServer){
         try {
+            final String password = KEYSTORE_PASSWORD;
+            final char[] passwordChars = password.toCharArray();
+
             KeyStore keyStore = KeyStore.getInstance("JKS");
-            keyStore.load(new FileInputStream("keystore.jks"), "password".toCharArray());
+            keyStore.load(new FileInputStream("cert.jks"), passwordChars);
+
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+            kmf.init(keyStore, passwordChars);
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+            tmf.init(keyStore);
 
 
-            SSLContext context = SSLContext.getInstance("TLS");
-            context.init(null, null, null);
+            SSLContext sslContext = null;
+            sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
             websocketServer.setWebsocketSocketServerFactory(new DefaultSSLWebSocketServerFactory(sslContext));
         } catch (Exception e) {
             System.err.println("Failed to set SSL");
+            e.printStackTrace();
         }
     }
 
@@ -258,6 +275,13 @@ public class ServerLauncher {
         if(command.equalsIgnoreCase("remove")) {
             removeCommand(args);
         }
+        if(command.equalsIgnoreCase("watchPacket")){
+            watchPacketCommand(args);
+        }
+        if(command.equalsIgnoreCase("unwatchPacket")){
+            unwatchPacketCommand(args);
+        }
+
     }
 
     private static void chunkCommand(String[] args) {
@@ -355,6 +379,33 @@ public class ServerLauncher {
         field.removeGamePiece(piece);
     }
 
+    private static void watchPacketCommand(String[] args){
+        if(args.length != 2) return;
+        String packetName = args[1];
+
+        String name = "com.hirshi001.game.shared.packets."+packetName;
+        try {
+            Class<?> clazz = Class.forName(name);
+            watchedPackets.add(clazz);
+            System.out.println("Watching packet: "+name);
+        } catch (ClassNotFoundException e) {
+            System.out.println("Could not find class: " + name);
+        }
+    }
+
+    private static void unwatchPacketCommand(String[] args){
+        if(args.length != 2) return;
+        String packetName = args[1];
+
+        String name = "com.hirshi001.game.shared.packets."+packetName;
+        try {
+            Class<?> clazz = Class.forName(name);
+            watchedPackets.remove(clazz);
+            System.out.println("Watching packet: "+name);
+        } catch (ClassNotFoundException e) {
+            System.out.println("Could not find class: " + name);
+        }
+    }
 
     public static void postRunnable(Runnable runnable) {
         synchronized (runnables) {

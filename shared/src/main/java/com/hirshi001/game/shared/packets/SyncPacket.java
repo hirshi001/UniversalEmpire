@@ -6,7 +6,7 @@ import com.hirshi001.networking.packet.Packet;
 
 public class SyncPacket extends Packet {
 
-    public long tick;
+    public long time;
     public int id;
     public int size;
     public ByteBuffer buffer;
@@ -16,9 +16,9 @@ public class SyncPacket extends Packet {
         super();
     }
 
-    public SyncPacket(long tick, GamePiece gamePiece){
+    public SyncPacket(long time, GamePiece gamePiece){
         super();
-        this.tick = tick;
+        this.time = time;
         this.id = gamePiece.getGameId();
         this.gamePiece = gamePiece;
     }
@@ -26,7 +26,7 @@ public class SyncPacket extends Packet {
     @Override
     public void writeBytes(ByteBuffer out) {
         super.writeBytes(out);
-        out.writeLong(tick);
+        out.writeLong(time);
         out.writeInt(id);
         gamePiece.writeSyncBytes(out);
     }
@@ -34,7 +34,7 @@ public class SyncPacket extends Packet {
     @Override
     public void readBytes(ByteBuffer in) {
         super.readBytes(in);
-        tick = in.readLong();
+        time = in.readLong();
         id = in.readInt();
         buffer = in.readBytes(in.readableBytes());
     }

@@ -1,10 +1,13 @@
 
 buildscript {
     repositories {
+        mavenLocal()
+        jcenter()
         mavenCentral()
     }
     dependencies {
         classpath "org.gretty:gretty:3.0.7"
+        classpath group: 'org.mini2Dx', name: 'butler', version: '2.1.0'
     }
 }
 apply plugin: "gwt"

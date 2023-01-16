@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -32,15 +33,11 @@ public class FirstScreen extends GameScreen {
 		batch = new SpriteBatch();
 		if(app.gameResources == null){
 			JsonReader jsonReader = new JsonReader();
-			JsonValue base = jsonReader.parse(Gdx.files.internal("resources/ResourceMap.json"));
+			JsonValue base = jsonReader.parse(Gdx.files.internal("resources/GameElements/ResourceMap.json"));
 			app.gameResources = new GameResources(base);
 		}
-		try {
-			app.gameResources.finishLoadingAsset("initial_screen_title");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		titleSprite = new Sprite(new TextureRegion((Texture) app.gameResources.get("initial_screen_title")));
+
+		titleSprite = new Sprite(new Texture("resources/StartScreen/UniversalEmpireTitle.png"));
 		titleSprite.setOriginBasedPosition(Gdx.graphics.getWidth() / 2F, Gdx.graphics.getHeight() / 2F);
 		titleSprite.setAlpha(0F);
 	}
@@ -59,7 +56,7 @@ public class FirstScreen extends GameScreen {
 		}
 		try {
 			app.gameResources.update();
-		} catch (IOException e) {
+		} catch (GdxRuntimeException e) {
 			e.printStackTrace();
 		}
 

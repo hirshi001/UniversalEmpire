@@ -92,10 +92,10 @@ public class ServerField extends Field {
             ServerChunk chunk = (ServerChunk) gamePiece.chunk;
             if (!gamePiece.isStatic()) {
                 for (PlayerData playerData : chunk.trackers) {
-                    playerData.channel.sendUDP(new SyncPacket(tick, gamePiece), null).perform();
+                    playerData.channel.sendUDP(new SyncPacket(time, gamePiece), null).perform();
                 }
                 for (PlayerData playerData : chunk.softTrackers) {
-                    playerData.channel.sendUDP(new SyncPacket(tick, gamePiece), null).perform();
+                    playerData.channel.sendUDP(new SyncPacket(time, gamePiece), null).perform();
                 }
             }
 

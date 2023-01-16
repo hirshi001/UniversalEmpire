@@ -6,7 +6,9 @@ import com.badlogic.gdx.backends.gwt.GwtApplicationConfiguration;
 import com.github.czyzby.websocket.GwtWebSockets;
 import com.hirshi001.buffer.bufferfactory.DefaultBufferFactory;
 import com.hirshi001.game.GameApp;
+import com.hirshi001.gwtnetworking.GWTChannel;
 import com.hirshi001.gwtnetworking.GWTNetworkingFactory;
+import com.hirshi001.gwtnetworking.SecureGWTNetworkingFactory;
 import com.hirshi001.gwtrestapi.GWTRestFutureFactory;
 import com.hirshi001.restapi.RestAPI;
 
@@ -28,6 +30,6 @@ public class GwtLauncher extends GwtApplication {
 		public ApplicationListener createApplicationListener () {
 			GwtWebSockets.initiate();
 			RestAPI.setFactory(new GWTRestFutureFactory());
-			return new GameApp(null, new DefaultBufferFactory(), new GWTNetworkingFactory(), "game.hrishislife.com", 443);
+			return new GameApp(null, new DefaultBufferFactory(), new SecureGWTNetworkingFactory(), "game.hrishislife.com", 443);
 		}
 }

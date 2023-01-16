@@ -12,11 +12,12 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.hirshi001.game.GameApp;
+import com.hirshi001.game.GameResources;
 import com.hirshi001.game.widgets.GameTextFieldStyle;
 
 import java.util.Arrays;
 
-import static com.hirshi001.game.Util.*;
+import static com.hirshi001.game.util.Util.*;
 
 public class ErrorScreen extends GameScreen {
 
@@ -24,6 +25,11 @@ public class ErrorScreen extends GameScreen {
 
     Stage stage;
     Table table;
+
+    public static final String BORDER_TEXTURE = "button_border";
+    public static final String BACKGROUND_TEXTURE = "button_background";
+    public static final String FONT = "font-256.fnt";
+
 
     public ErrorScreen(GameApp gameApp, Throwable cause) {
         super(gameApp);
@@ -39,9 +45,11 @@ public class ErrorScreen extends GameScreen {
         table.setFillParent(true);
 
 
-        TextureRegion border = new TextureRegion((Texture) GameApp.Game().gameResources.get(BORDER_TEXTURE));
-        TextureRegion background = new TextureRegion((Texture) GameApp.Game().gameResources.get(BACKGROUND_TEXTURE));
-        BitmapFont font = GameApp.Game().gameResources.get(FONT);
+        GameResources resources = app.gameResources;
+
+        TextureRegion border = resources.getFromAtlas(BORDER_TEXTURE);
+        TextureRegion background = resources.getFromAtlas(BACKGROUND_TEXTURE);
+        BitmapFont font = resources.get(FONT);
         TextArea textArea = new TextArea(cause.toString()+"\n"+ Arrays.toString(cause.getStackTrace()), new GameTextFieldStyle(500, 500, 5, border, background, font));
         textArea.setAlignment(Align.center);
         table.add(textArea).expand().fill();

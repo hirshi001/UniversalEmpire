@@ -37,13 +37,14 @@ public class Player extends Entity {
         super.tick(delta);
         if (field.isServer()) {
             Properties props = getProperties();
-            if (props.get("health", 100F) <= 0) {
+            Number health = props.<Number>get("health", 100F);
+            if (health.floatValue() <= 0) {
                 bounds.x = 0;
                 bounds.y = 0;
                 props.put("health", 100F);
+                update();
             }
         }
-        update();
     }
 
     @Override

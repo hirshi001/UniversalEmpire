@@ -1,15 +1,12 @@
 package com.hirshi001.game.widgets;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextArea;
 import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable;
 import com.hirshi001.game.GameApp;
 
-import static com.hirshi001.game.Util.*;
+import static com.hirshi001.game.util.Util.*;
 
 public class PropertiesTextArea extends TextArea {
     public PropertiesTextArea(String text) {

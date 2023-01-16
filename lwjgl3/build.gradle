@@ -23,12 +23,14 @@ eclipse.project.name = appName + '-lwjgl3'
 sourceCompatibility = JavaVersion.VERSION_16
 
 dependencies {
+
 	implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
 	implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
 	implementation "com.github.hirshi001:javanetworkinglibrary:$javaNetworkingVersion"
 
 	implementation project(':core')
 }
+
 
 def os = System.properties['os.name'].toLowerCase()
 

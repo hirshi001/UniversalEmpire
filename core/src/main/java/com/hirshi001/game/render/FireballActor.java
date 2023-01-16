@@ -8,24 +8,20 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Interpolation;
+import com.hirshi001.game.GameApp;
 import com.hirshi001.game.shared.entities.CircleGamePiece;
 import com.hirshi001.game.shared.entities.Fireball;
 
 public class FireballActor extends GamePieceActor<Fireball> {
 
 
-    static TextureRegion region;
-
-    static{
-        int size = 64;
-        Pixmap pixmap = new Pixmap(size*2, size*2, Pixmap.Format.RGBA8888);
-        pixmap.setColor(Color.YELLOW);
-        pixmap.fillCircle(size, size, size);
-        region = new TextureRegion(new Texture(pixmap));
-    }
+    TextureRegion region;
+    Affine2 transform;
 
     public FireballActor(Fireball gamePiece) {
         super(gamePiece);
+        region = GameApp.Game().gameResources.getFromAtlas("entities/bullet/Bullet");
+        transform = new Affine2();
     }
 
     @Override
@@ -37,7 +33,12 @@ public class FireballActor extends GamePieceActor<Fireball> {
         } else {
             displayPosition.interpolate(position, 0.5F, Interpolation.linear);
         }
-        batch.draw(region, displayPosition.x, displayPosition.y, gamePiece.bounds.width, gamePiece.bounds.height);
+
+        Number angle = gamePiece.getProperties().get("angle", 10F);
+        transform.setToTranslation(displayPosition.x, displayPosition.y);
+        transform.rotateRad(angle.floatValue());
+        batch.draw(region, gamePiece.bounds.width, gamePiece.bounds.height, transform);
+        // batch.draw(region, displayPosition.x, displayPosition.y, gamePiece.bounds.width, gamePiece.bounds.height);
     }
 
     @Override
@@ -45,6 +46,6 @@ public class FireballActor extends GamePieceActor<Fireball> {
         super.debugRender(renderer);
         Number radius = gamePiece.getProperties().get("radius", 0.5F);
         renderer.setColor(Color.RED);
-        renderer.circle(displayPosition.x-radius.floatValue(), displayPosition.y- radius.floatValue(), radius.floatValue(), 20);
+        renderer.circle(displayPosition.x, displayPosition.y , radius.floatValue(), 20);
     }
 }

@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.hirshi001.buffer.bufferfactory.BufferFactory;
 import com.hirshi001.game.screens.ErrorScreen;
 import com.hirshi001.game.screens.FirstScreen;
+import com.hirshi001.game.screens.MainMenuScreen;
 import com.hirshi001.game.shared.packets.PingPacket;
 import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.settings.Network;
@@ -57,9 +58,8 @@ public class GameApp extends Game {
 	@Override
 	public void create() {
 		Gdx.app.setLogLevel(Application.LOG_DEBUG);
-		atlas = new TextureAtlas("resources/spriteSheets/WizardSpriteSheet.atlas");
 		GameSettings.runnablePoster = Gdx.app::postRunnable;
-		Util.loadUtil();
+		// setScreen(new FirstScreen(this));
 		setScreen(new FirstScreen(this));
 	}
 

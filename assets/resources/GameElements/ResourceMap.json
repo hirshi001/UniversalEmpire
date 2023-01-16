@@ -1,0 +1,25 @@
+{
+  "dir": "resources/GameElements",
+  "atlas": "GameElementsAtlas.atlas",
+  "resourcesDir": "files",
+  "aliases" : {
+    "Texture": "com.badlogic.gdx.graphics.Texture",
+    "Music": "com.badlogic.gdx.audio.Music",
+    "Sound": "com.badlogic.gdx.audio.Sound",
+    "BitmapFont": "com.badlogic.gdx.graphics.g2d.BitmapFont"
+  },
+  "resources" : {
+    "sounds/funnySound.wav": "Sound",
+
+    "fonts/opensans-16.fnt": "BitmapFont",
+    "fonts/opensans-32.fnt": "BitmapFont",
+    "fonts/opensans-64.fnt": "BitmapFont"
+  },
+  "map": {
+    "opening_sound": "funnySound.wav",
+
+    "font-16": "fonts/opensans-16.fnt",
+    "font-32": "fonts/opensans-32.fnt",
+    "font-64": "fonts/opensans-64.fnt"
+  }
+}

@@ -26,4 +26,12 @@ public abstract class Entity extends GamePiece {
         return false;
     }
 
+    public boolean isProjectile() {
+        return false;
+    }
+
+    public boolean isLivingEntity() {
+        return false;
+    }
+
 }

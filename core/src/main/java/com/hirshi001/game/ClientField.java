@@ -11,6 +11,7 @@ import com.hirshi001.game.shared.packets.TrackChunkPacket;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.Point;
 import com.hirshi001.networking.network.client.Client;
+import com.hirshi001.networking.packethandlercontext.PacketType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,7 +60,7 @@ public class ClientField extends Field {
             }
         }
         chunkLastRequested.put(new HashedPoint(point.x, point.y), System.currentTimeMillis());
-        client.getChannel().sendTCP(new TrackChunkPacket(point.x, point.y), null).perform();
+        client.getChannel().sendDeferred(new TrackChunkPacket(point.x, point.y), null, PacketType.TCP);
         return null;
     }
 
@@ -72,8 +73,12 @@ public class ClientField extends Field {
 
     @Override
     public void tick(float delta) {
-        client.getChannel().sendTCP(new MaintainConnectionPacket(), null).perform();
-        Vector2 position = getPosition();
+        if (client.isOpen()) {
+            if (client.supportsUDP())
+                client.getChannel().sendDeferred(new MaintainConnectionPacket(), null, PacketType.UDP);
+            else
+                client.getChannel().sendDeferred(new MaintainConnectionPacket(), null, PacketType.TCP);
+        }
         Point chunkP = getChunkPosition(position.x, position.y);
         int s = 2;
         for (int i = -s; i <= s; i++) {
@@ -110,7 +115,7 @@ public class ClientField extends Field {
 
     @Override
     public boolean removeChunk(Point chunk) {
-        client.getChannel().sendTCP(new TrackChunkPacket(chunk.x, chunk.y, true), null).perform();
+        client.getChannel().sendDeferred(new TrackChunkPacket(chunk.x, chunk.y, true), null, PacketType.TCP);
         chunkLastRequested.remove(chunk);
         return super.removeChunk(chunk);
 

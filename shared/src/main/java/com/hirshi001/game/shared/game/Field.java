@@ -10,6 +10,7 @@ import com.hirshi001.game.shared.util.Resources;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public abstract class Field extends World {
 
@@ -17,7 +18,7 @@ public abstract class Field extends World {
 
     protected final Map<HashedPoint, Chunk> chunks = new ConcurrentHashMap<>();
     private int nextId;
-    public long tick = 0;
+    public long time;
     private final Map<Integer, GamePiece> gamePieces;
     private final Array<GamePiece> gamePiecesToAdd = new Array<>(), addedGamePieces = new Array<>(),
             gamePiecesToRemove = new Array<>(), removedGamePieces = new Array<>();
@@ -251,7 +252,8 @@ public abstract class Field extends World {
     }
 
     public void tick(float delta) {
-        tick++;
+        //convert delta into millis and add it to time
+        time += delta * 1000;
 
         for (GamePiece gamePiece : getItems()) {
             gamePiece.tick(delta);

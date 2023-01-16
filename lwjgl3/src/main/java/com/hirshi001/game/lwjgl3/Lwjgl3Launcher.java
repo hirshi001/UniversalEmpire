@@ -7,11 +7,9 @@ import com.hirshi001.buffer.bufferfactory.BufferFactory;
 import com.hirshi001.buffer.bufferfactory.DefaultBufferFactory;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.javanetworking.JavaNetworkFactory;
-import com.hirshi001.javanetworking.client.JavaClient;
 import com.hirshi001.javarestapi.JavaRestFutureFactory;
 import com.hirshi001.networking.network.NetworkFactory;
 import com.hirshi001.restapi.RestAPI;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,17 +17,21 @@ import java.util.concurrent.ScheduledExecutorService;
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
 	public static void main(String[] args) {
+		// Texture Packer
+
+
 		String ip;
 		int port;
 		if(args.length==0) {
-			ip = "54.219.108.146";
-			port = 3001;
+			ip = "localhost";
+			port = 3000;
 		} else {
 			ip = args[0];
 			port = Integer.parseInt(args[1]);
 		}
 		createApplication(ip, port);
 	}
+
 
 	private static Lwjgl3Application createApplication(String ip, int port) {
 		RestAPI.setFactory(new JavaRestFutureFactory());
