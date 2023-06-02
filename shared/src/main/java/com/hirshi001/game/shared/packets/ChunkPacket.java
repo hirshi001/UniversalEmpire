@@ -3,11 +3,12 @@ package com.hirshi001.game.shared.packets;
 import com.hirshi001.buffer.buffers.ByteBuffer;
 import com.hirshi001.game.shared.entities.GamePieces;
 import com.hirshi001.game.shared.game.Chunk;
-import com.hirshi001.game.shared.game.GamePiece;
+import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.game.shared.util.HashedPoint;
+import com.hirshi001.game.shared.util.Point;
 import com.hirshi001.networking.packet.Packet;
 
 import java.util.Set;
@@ -27,6 +28,8 @@ public class ChunkPacket extends Packet {
     @Override
     public void writeBytes(ByteBuffer out) {
         super.writeBytes(out);
+
+        // write chunk
         out.writeInt(chunk.getChunkX());
         out.writeInt(chunk.getChunkY());
         Tile[][] tiles = chunk.getTiles();
@@ -39,6 +42,8 @@ public class ChunkPacket extends Packet {
                 else out.writeInt(tile.getID());
             }
         }
+
+        // write game pieces
         final Set<GamePiece> items = chunk.items;
         out.writeInt(items.size());
         for (GamePiece item : items) {
@@ -53,27 +58,38 @@ public class ChunkPacket extends Packet {
     @Override
     public void readBytes(ByteBuffer in) {
         super.readBytes(in);
+        int size=0;
+        HashedPoint chunkPos = new HashedPoint(in.readInt(), in.readInt());
         try {
-            chunk = new Chunk(GameSettings.CHUNK_SIZE, new HashedPoint(in.readInt(), in.readInt()));
+            chunk = new Chunk(GameSettings.CHUNK_SIZE, chunkPos);
+
+            // read chunks
             int i, j;
-            int id;
+            int id = 0;
             for (i = 0; i < chunk.getChunkSize(); i++) {
                 for (j = 0; j < chunk.getChunkSize(); j++) {
                     id = in.readInt();
                     if (id != -1) chunk.setTile(i, j, Tiles.TILE_REGISTRY.get(id));
                 }
             }
-            int size = in.readInt();
-            if(size==7){
-                System.out.println("Received chunk with 7 entities");
-            }
-            for (i = 0; i < size; i++) {
-                id = in.readInt();
-                GamePiece item = GamePieces.registry.get(id).get();
-                item.readBytes(in);
-                chunk.add(item);
+
+            // read game pieces
+            GamePiece item = null;
+            try {
+                size = in.readInt();
+                for (i = 0; i < size; i++) {
+                    id = in.readInt();
+                    item = GamePieces.registry.get(id).get();
+                    item.readBytes(in);
+                    chunk.add(item);
+                }
+            }catch (Exception e){
+                System.err.println("failed to read the following game piece: " + item + " with id: " + id);
+                e.printStackTrace();
             }
         }catch (Exception e){
+            System.out.println("size: " + size);
+            System.out.println("chunk: " + chunkPos);
             e.printStackTrace();
         }
     }

@@ -21,7 +21,7 @@ public class Tiles {
         SNOW = register(new Tile(), 1);
         GRASS = register(new Tile(), 2);
         DIRT = register(new Tile(), 3);
-        STONE = register(new Tile(), 4);
+        STONE = register(new Tile(true), 4);
         SAND = register(new Tile(), 5);
     }
 

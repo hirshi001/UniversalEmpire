@@ -39,7 +39,7 @@ public class Lwjgl3Launcher {
 		ScheduledExecutorService executorService = Executors.newScheduledThreadPool(3);
 		NetworkFactory networkFactory = new JavaNetworkFactory(executorService);
 
-		Disposable disposable = executorService::shutdown;
+		Disposable disposable = executorService::shutdownNow;
 
 		return new Lwjgl3Application(new GameApp(disposable, bufferFactory, networkFactory, ip, port), getDefaultConfiguration());
 	}

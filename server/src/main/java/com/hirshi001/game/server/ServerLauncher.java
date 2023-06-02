@@ -4,11 +4,10 @@ import com.badlogic.gdx.utils.Array;
 import com.hirshi001.buffer.bufferfactory.BufferFactory;
 import com.hirshi001.buffer.bufferfactory.DefaultBufferFactory;
 import com.hirshi001.game.shared.entities.GamePieces;
-import com.hirshi001.game.shared.entities.Knight;
-import com.hirshi001.game.shared.entities.Player;
+import com.hirshi001.game.shared.entities.troop.Knight;
 import com.hirshi001.game.shared.entities.TestGamePiece;
 import com.hirshi001.game.shared.game.Chunk;
-import com.hirshi001.game.shared.game.GamePiece;
+import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.packets.*;
 import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.settings.Network;
@@ -102,12 +101,8 @@ public class ServerLauncher {
                 .register(RequestPropertyNamePacket::new, PacketHandlers::handleRequestPropertyNamePacket, RequestPropertyNamePacket.class, 8)
                 .register(PropertyNamePacket::new, null, PropertyNamePacket.class, 9)
                 .register(MaintainConnectionPacket::new, null, MaintainConnectionPacket.class, 10)
-                .register(PlayerMovePacket::new, PacketHandlers::handlePlayerMovePacket, PlayerMovePacket.class, 11)
-                .register(PingPacket::new,
-                        (ctx) -> ctx.channel.sendNow(ctx.packet.setResponsePacket(ctx.packet), null, ctx.packetType),
-                        PingPacket.class, 12)
-                .register(ShootPacket::new, PacketHandlers::handleShootPacket, ShootPacket.class, 13);
-
+                .register(PingPacket::new, (ctx) -> ctx.channel.sendNow(ctx.packet.setResponsePacket(ctx.packet), null, ctx.packetType), PingPacket.class, 11)
+                .register(TroopGroupPacket::new, PacketHandlers::handleTroopGroupPacket, TroopGroupPacket.class, 12);
 
         NetworkData networkData = new DefaultNetworkData(Network.PACKET_ENCODER_DECODER, registryContainer);
 
@@ -116,7 +111,7 @@ public class ServerLauncher {
             public void initChannel(Channel channel) {
                 channel.setChannelOption(ChannelOption.TCP_AUTO_FLUSH, true);
                 channel.setChannelOption(ChannelOption.UDP_AUTO_FLUSH, true);
-                channel.setChannelOption(ChannelOption.PACKET_TIMEOUT, TimeUnit.SECONDS.toMillis(10));
+                channel.setChannelOption(ChannelOption.PACKET_TIMEOUT, TimeUnit.SECONDS.toNanos(10));
                 channel.setChannelOption(ChannelOption.DEFAULT_SWITCH_PROTOCOL, true);
             }
         };
@@ -148,26 +143,12 @@ public class ServerLauncher {
             }
         };
 
-        WebsocketServer websocketServer = new WebsocketServer(new ScheduledExec() {
-            @Override
-            public void run(Runnable runnable, long delay) {
-                executorService.schedule(runnable, delay, TimeUnit.MILLISECONDS);
-            }
-
-            @Override
-            public void run(Runnable runnable, long delay, TimeUnit period) {
-                executorService.schedule(runnable, delay, period);
-            }
-
-            @Override
-            public void runDeferred(Runnable runnable) {
-                executorService.execute(runnable);
-            }
-        }, networkData, bufferFactory, websocketPort); // networkFactory.createServer(networkData, bufferFactory, port);
-
+        WebsocketServer websocketServer = new WebsocketServer(RestAPI.getDefaultExecutor(), networkData, bufferFactory, websocketPort); // networkFactory.createServer(networkData, bufferFactory, port);
+        // TODO: Update the WebsocketServer code sot hat it has packet timeout functionality and potentially other things it is currently missing
         websocketServer.setChannelInitializer(channelInitializer);
         websocketServer.addServerListener(serverListener);
         setSSL(websocketServer);
+        System.out.println("SSL Set");
         websocketServer.startTCP().onFailure(Throwable::printStackTrace).perform().get();
 
         System.out.println("WebsocketServer started on " + websocketServer.getPort());
@@ -187,9 +168,9 @@ public class ServerLauncher {
             }
         }
         field.tick(1F);
-        for(int i=0;i<1;i++) {
+        for(int i=-10;i<=10;i+=2) {
             Knight knight = new Knight();
-            knight.bounds.setPosition(5F, 5F);
+            knight.bounds.setPosition(i, i);
             field.addGamePiece(knight);
         }
 
@@ -281,7 +262,6 @@ public class ServerLauncher {
         if(command.equalsIgnoreCase("unwatchPacket")){
             unwatchPacketCommand(args);
         }
-
     }
 
     private static void chunkCommand(String[] args) {

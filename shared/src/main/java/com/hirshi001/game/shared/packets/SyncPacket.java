@@ -1,7 +1,7 @@
 package com.hirshi001.game.shared.packets;
 
 import com.hirshi001.buffer.buffers.ByteBuffer;
-import com.hirshi001.game.shared.game.GamePiece;
+import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.networking.packet.Packet;
 
 public class SyncPacket extends Packet {

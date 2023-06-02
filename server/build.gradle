@@ -1,37 +1,103 @@
 apply plugin: 'application'
+apply plugin: 'org.hidetake.ssh'
 
 sourceCompatibility = JavaVersion.VERSION_16
 mainClassName = 'com.hirshi001.game.server.ServerLauncher'
 eclipse.project.name = appName + '-server'
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.hidetake:gradle-ssh-plugin:2.10.1'
+    }
+}
+
 dependencies {
 
-	implementation "com.github.hirshi001:javanetworkinglibrary:$javaNetworkingVersion"
-	implementation "com.github.hirshi001:WebsocketNetworkingServer:$websocketNetworkingServerVersion"
-	implementation project(':shared')
+    implementation "com.github.hirshi001:javanetworkinglibrary:$javaNetworkingVersion"
+    implementation "com.github.hirshi001:WebsocketNetworkingServer:$websocketNetworkingServerVersion"
+    implementation project(':shared')
 }
 
 jar {
-	archiveBaseName.set(appName)
+    archiveBaseName.set(appName)
 // the duplicatesStrategy matters starting in Gradle 7.0; this setting works.
-	duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-	dependsOn configurations.runtimeClasspath
-	from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    dependsOn configurations.runtimeClasspath
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 // these "exclude" lines remove some unnecessary duplicate files in the output JAR.
-	exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
-	dependencies {
-		exclude('META-INF/INDEX.LIST', 'META-INF/maven/**')
-	}
+    exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
+    dependencies {
+        exclude('META-INF/INDEX.LIST', 'META-INF/maven/**')
+    }
 // setting the manifest makes the JAR runnable.
-	manifest {
-		attributes 'Main-Class': project.mainClassName
-	}
+    manifest {
+        attributes 'Main-Class': project.mainClassName
+    }
 // this last step may help on some OSes that need extra instruction to make runnable JARs.
-	doLast {
-		file(archiveFile).setExecutable(true, false)
-	}
+    doLast {
+        file(archiveFile).setExecutable(true, false)
+    }
 }
 
 // Equivalent to the jar task; here for compatibility with gdx-setup.
 task dist(dependsOn: [jar]) {
+}
+
+remotes {
+    server {
+        host = 'game.hrishislife.com'
+        user = 'ec2-user'
+        identity = file('/Users/hrishikesh/secretkeypairname.pem')
+    }
+}
+
+task pushServer {
+    dependsOn "jar"
+    doLast {
+        // Copy the jar to the server using sftp
+        ssh.run {
+            session(remotes.server) {
+                put from: "${project.rootDir}/server/build/libs/UniversalEmpire-0.0.2.jar", into: '/home/ec2-user/UniversalEmpireServer.jar'
+            }
+        }
+    }
+}
+
+task runServer {
+    doLast {
+        // Copy the jar to the server using sftp
+        try {
+            ssh.run {
+                session(remotes.server) {
+                    // kill the server if it is still running
+                    execute 'sudo kill $(sudo lsof -t -i:3000)'
+                }
+            }
+        } catch (e) {
+        }
+        try {
+            ssh.run {
+                session(remotes.server) {
+                    // kill the server if it is still running
+                    execute 'sudo kill $(sudo lsof -t -i:443)'
+                }
+            }
+        } catch (e) {
+        }
+
+        ssh.run {
+            session(remotes.server) {
+                // run the server with the last argument as the variable for password
+                execute "sudo java -jar UniversalEmpireServer.jar 443 3000 $password"
+            }
+        }
+    }
+}
+
+
+task pushAndRunServer(dependsOn: [pushServer, runServer]) {
+
 }

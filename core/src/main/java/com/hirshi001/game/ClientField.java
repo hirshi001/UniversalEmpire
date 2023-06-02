@@ -1,16 +1,22 @@
 package com.hirshi001.game;
 
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.hirshi001.game.render.ActorMap;
-import com.hirshi001.game.shared.entities.Player;
+import com.hirshi001.game.render.FieldRender;
+import com.hirshi001.game.shared.control.TroopGroup;
+import com.hirshi001.game.shared.entities.troop.Troop;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
-import com.hirshi001.game.shared.game.GamePiece;
+import com.hirshi001.game.shared.entities.GamePiece;
+import com.hirshi001.game.shared.game.PlayerData;
 import com.hirshi001.game.shared.packets.MaintainConnectionPacket;
 import com.hirshi001.game.shared.packets.TrackChunkPacket;
+import com.hirshi001.game.shared.packets.TroopGroupPacket;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.Point;
 import com.hirshi001.networking.network.client.Client;
+import com.hirshi001.networking.packet.Packet;
 import com.hirshi001.networking.packethandlercontext.PacketType;
 
 import java.util.HashMap;
@@ -20,16 +26,19 @@ import java.util.concurrent.TimeUnit;
 public class ClientField extends Field {
 
     private final Client client;
-
+    public final PlayerData playerData = new PlayerData();
     private final Map<Point, Long> chunkLastRequested = new HashMap<>();
     private final Map<Chunk, Long> chunkLife = new HashMap<>();
 
     private final Vector2 position = new Vector2();
-
-    public int playerId;
+    public FieldRender fieldRender;
 
     public Vector2 getPosition() {
         return position;
+    }
+
+    public int getControllerId() {
+        return playerData.controllerId;
     }
 
     public ClientField(Client client, float cellSize, int chunkSize) {
@@ -37,14 +46,33 @@ public class ClientField extends Field {
         this.client = client;
     }
 
-    public Player getPlayer() {
-        return (Player) getGamePiece(playerId);
+    public void setFieldRender(FieldRender fieldRender) {
+        this.fieldRender = fieldRender;
+    }
+
+    public void addTroopGroup(TroopGroup troopGroup) {
+        playerData.troopGroups.put(troopGroup, troopGroup);
+        Packet packet = new TroopGroupPacket(TroopGroupPacket.OperationType.CREATE, troopGroup.name, troopGroup.getDirtyTroops());
+        client.getChannel().sendDeferred(packet, null, PacketType.TCP);
+        troopGroup.dirtyTroops.clear();
+    }
+
+    public TroopGroup getTroopGroup(String name) {
+        return playerData.troopGroups.get(new TroopGroup(this, name, getControllerId()));
+    }
+
+    public void addTroopsToGroup(TroopGroup troopGroup, Array<Troop> troops) {
+        for(Troop troop : troops) {
+            troopGroup.addTroop(troop);
+        }
+        Packet packet = new TroopGroupPacket(TroopGroupPacket.OperationType.ADD, troopGroup.name, troops);
+        client.getChannel().sendDeferred(packet, null, PacketType.TCP);
     }
 
     @Override
     protected void add0(GamePiece gamePiece, int i) {
         super.add0(gamePiece, i);
-        gamePiece.userData = ActorMap.get(gamePiece);
+        gamePiece.userData = ActorMap.get(gamePiece, fieldRender);
     }
 
     @Override
@@ -101,6 +129,14 @@ public class ClientField extends Field {
             return false;
         });
         super.tick(delta);
+
+        for (TroopGroup troopGroup : playerData.troopGroups.values()) {
+            if (troopGroup.dirtyTroops.size > 0) {
+                Packet packet = new TroopGroupPacket(TroopGroupPacket.OperationType.ADD, troopGroup.name, troopGroup.getDirtyTroops());
+                client.getChannel().sendDeferred(packet, null, PacketType.TCP);
+                troopGroup.dirtyTroops.clear();
+            }
+        }
     }
 
     @Override
@@ -108,10 +144,6 @@ public class ClientField extends Field {
         return false;
     }
 
-    @Override
-    public Chunk relocateGamePiece(GamePiece item, Chunk original) {
-        return super.relocateGamePiece(item, original);
-    }
 
     @Override
     public boolean removeChunk(Point chunk) {

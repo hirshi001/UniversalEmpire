@@ -3,7 +3,6 @@ package com.hirshi001.game.shared.entities;
 import com.badlogic.gdx.math.MathUtils;
 import com.hirshi001.buffer.buffers.ByteBuffer;
 import com.hirshi001.game.shared.game.Field;
-import com.hirshi001.game.shared.game.GamePiece;
 import com.hirshi001.game.shared.util.props.Properties;
 
 public class CircleGamePiece extends GamePiece {

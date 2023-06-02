@@ -1,6 +1,7 @@
 package com.hirshi001.game.server;
 
 import com.hirshi001.game.shared.game.Chunk;
+import com.hirshi001.game.shared.game.PlayerData;
 import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.shared.util.HashedPoint;
 

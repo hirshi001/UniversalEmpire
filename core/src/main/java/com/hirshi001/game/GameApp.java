@@ -1,18 +1,21 @@
 package com.hirshi001.game;
 
-import com.badlogic.gdx.Application;
-import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Graphics;
+import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.hirshi001.buffer.bufferfactory.BufferFactory;
+import com.hirshi001.game.render.FieldRender;
 import com.hirshi001.game.screens.ErrorScreen;
 import com.hirshi001.game.screens.FirstScreen;
+import com.hirshi001.game.screens.GameScreen;
 import com.hirshi001.game.screens.MainMenuScreen;
+import com.hirshi001.game.screens.maingamescreen.GameGUI;
+import com.hirshi001.game.screens.maingamescreen.MainGameScreen;
 import com.hirshi001.game.shared.packets.PingPacket;
 import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.settings.Network;
@@ -24,14 +27,15 @@ import java.text.NumberFormat;
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class GameApp extends Game {
 
-	public BufferFactory bufferFactory;
-	public NetworkFactory networkFactory;
+	public static BufferFactory bufferFactory;
+	public static NetworkFactory networkFactory;
 
-	public Client client;
-	public GameResources gameResources;
-	public TextureAtlas atlas;
-	public ClientField field;
+	public static Client client;
+	public static GameResources gameResources;
+	public static ClientField field;
+	public static FieldRender fieldRenderer;
 	public Disposable disposeWhenClose;
+
 
 	public static long PING = 0L;
 	public final String ip;
@@ -39,6 +43,29 @@ public class GameApp extends Game {
 
 	public static GameApp Game(){
 		return (GameApp) Gdx.app.getApplicationListener();
+	}
+
+	public static void addGameGui(Actor gameGUI){
+		Screen screen = Game().getScreen();
+		if(screen instanceof MainGameScreen){
+			((MainGameScreen) screen).addGameGUI(gameGUI);
+		}
+	}
+
+	public static boolean removeGameGui(Actor gameGUI){
+		Screen screen = Game().getScreen();
+		if(screen instanceof MainGameScreen){
+			return ((MainGameScreen) screen).removeGameGUI(gameGUI);
+		}
+		return false;
+	}
+
+	public static Stage guiStage(){
+		Screen screen = Game().getScreen();
+		if(screen instanceof GameScreen){
+			return ((MainGameScreen) screen).getGuiStage();
+		}
+		return null;
 	}
 
 

@@ -5,15 +5,17 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.hirshi001.game.shared.game.GamePiece;
+import com.hirshi001.game.shared.entities.GamePiece;
 
 public abstract class GamePieceActor<T extends GamePiece> {
 
     protected T gamePiece;
+    protected FieldRender fieldRender;
     protected Vector2 displayPosition = new Vector2(), position = new Vector2();
 
-    public GamePieceActor(T gamePiece){
+    public GamePieceActor(T gamePiece, FieldRender fieldRender){
         this.gamePiece = gamePiece;
+        this.fieldRender = fieldRender;
     }
 
     public T getGamePiece(){

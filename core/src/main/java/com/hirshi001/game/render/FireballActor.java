@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.math.MathUtils;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.game.shared.entities.CircleGamePiece;
 import com.hirshi001.game.shared.entities.Fireball;
@@ -18,9 +19,9 @@ public class FireballActor extends GamePieceActor<Fireball> {
     TextureRegion region;
     Affine2 transform;
 
-    public FireballActor(Fireball gamePiece) {
-        super(gamePiece);
-        region = GameApp.Game().gameResources.getFromAtlas("entities/bullet/Bullet");
+    public FireballActor(Fireball gamePiece, FieldRender fieldRender) {
+        super(gamePiece, fieldRender);
+        region = GameApp.Game().gameResources.getFromAtlas("entities/arrow/arrow");
         transform = new Affine2();
     }
 
@@ -34,11 +35,10 @@ public class FireballActor extends GamePieceActor<Fireball> {
             displayPosition.interpolate(position, 0.5F, Interpolation.linear);
         }
 
-        Number angle = gamePiece.getProperties().get("angle", 10F);
+        Number angle = gamePiece.getProperties().get("angle", 0F);
         transform.setToTranslation(displayPosition.x, displayPosition.y);
-        transform.rotateRad(angle.floatValue());
+        transform.rotateRad(angle.floatValue() - MathUtils.PI/4);
         batch.draw(region, gamePiece.bounds.width, gamePiece.bounds.height, transform);
-        // batch.draw(region, displayPosition.x, displayPosition.y, gamePiece.bounds.width, gamePiece.bounds.height);
     }
 
     @Override

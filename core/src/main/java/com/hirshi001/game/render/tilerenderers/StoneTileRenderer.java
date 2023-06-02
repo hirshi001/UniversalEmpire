@@ -2,9 +2,8 @@ package com.hirshi001.game.render.tilerenderers;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.hirshi001.game.shared.entities.TileGamePiece;
 import com.hirshi001.game.shared.game.Field;
-import com.hirshi001.game.shared.game.GamePiece;
+import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.tiles.Tile;
 
 public class StoneTileRenderer extends DefaultTileRenderer<Tile>{

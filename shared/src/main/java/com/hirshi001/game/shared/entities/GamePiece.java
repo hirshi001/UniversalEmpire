@@ -1,11 +1,12 @@
-package com.hirshi001.game.shared.game;
+package com.hirshi001.game.shared.entities;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
 import com.dongbat.jbump.Response;
 import com.hirshi001.buffer.buffers.ByteBuffer;
-import com.hirshi001.game.shared.entities.GamePieces;
+import com.hirshi001.game.shared.game.Chunk;
+import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.registry.ID;
 import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.util.ByteBufferUtil;
@@ -52,6 +53,10 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
         this.alive = true;
     }
 
+    public void removed() {
+        this.alive = false;
+    }
+
     @Override
     public int getID() {
         return id;
@@ -82,6 +87,14 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
 
     public boolean worldInteractable() {
         return true;
+    }
+
+    public boolean isProjectile() {
+        return false;
+    }
+
+    public boolean isLivingEntity() {
+        return false;
     }
 
     public CollisionFilter getCollisionFilter() {
@@ -128,4 +141,13 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
         return false;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof GamePiece && ((GamePiece) o).getGameId() == getGameId();
+    }
+
+    @Override
+    public int hashCode() {
+        return getGameId();
+    }
 }

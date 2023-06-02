@@ -1,48 +1,49 @@
 package com.hirshi001.game.shared.entities;
 
-import com.badlogic.gdx.math.MathUtils;
 import com.hirshi001.buffer.buffers.ByteBuffer;
-import com.hirshi001.game.shared.game.Field;
-import com.hirshi001.game.shared.game.GamePiece;
-import com.hirshi001.game.shared.tiles.Tile;
 
-public class TileGamePiece extends GamePiece {
+public class SolidTile extends GamePiece {
 
     private int x, y;
 
-    public TileGamePiece(int x, int y) {
-        super();
+    public SolidTile(){
+
+    }
+    public SolidTile(int x, int y) {
         this.x = x;
         this.y = y;
-    }
-
-
-    @Override
-    public void setField(Field field) {
-        super.setField(field);
+        bounds.set(x, y, 1, 1);
     }
 
     @Override
     public void writeBytes(ByteBuffer buffer) {
-        super.writeBytes(buffer);
+        buffer.writeInt(getGameId());
         buffer.writeInt(x);
         buffer.writeInt(y);
     }
 
     @Override
     public void readBytes(ByteBuffer buffer) {
-        super.readBytes(buffer);
+        setGameId(buffer.readInt());
         x = buffer.readInt();
         y = buffer.readInt();
+        bounds.set(x, y, 1, 1);
     }
 
     @Override
-    public void tick(float delta) {
-        super.tick(delta);
+    public void writeSyncBytes(ByteBuffer buffer) {
+        // super.writeSyncBytes(buffer);
+    }
+
+    @Override
+    public void readSyncBytes(ByteBuffer buffer) {
+        // super.readSyncBytes(buffer);
     }
 
     @Override
     public boolean isStatic() {
         return true;
     }
+
+
 }

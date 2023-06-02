@@ -1,8 +1,11 @@
 package com.hirshi001.game.server;
 
+import com.badlogic.gdx.math.MathUtils;
+import com.hirshi001.game.shared.control.TroopGroup;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
-import com.hirshi001.game.shared.game.GamePiece;
+import com.hirshi001.game.shared.entities.GamePiece;
+import com.hirshi001.game.shared.game.PlayerData;
 import com.hirshi001.game.shared.packets.*;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.Point;
@@ -16,6 +19,7 @@ public class ServerField extends Field {
     private ChunkLoader loader;
     public Server server;
     public Set<PlayerData> players = Collections.synchronizedSet(new HashSet<>());
+    private int nextControllerId = 0;
 
 
     public ServerField(Server server, ChunkLoader loader, float cellSize, int chunkSize) {
@@ -23,6 +27,11 @@ public class ServerField extends Field {
         this.server = server;
         this.loader = loader;
     }
+
+    public int getNextControllerId() {
+        return nextControllerId++;
+    }
+
 
     @Override
     public Chunk loadChunk(int x, int y) {
@@ -72,8 +81,22 @@ public class ServerField extends Field {
         return newChunk;
     }
 
+    double dt = 0;
+
     @Override
     public void tick(float delta) {
+        // Test Code:
+        dt += delta;
+        if (dt >= 10) {
+            dt = 0;
+            for (PlayerData playerData : players) {
+                for (TroopGroup troopGroup : playerData.troopGroups.values()) {
+                    troopGroup.moveTroops(MathUtils.random(-20, 10), MathUtils.random(-20, 20), 2);
+                }
+            }
+        }
+
+
         Iterator<PlayerData> iterator = players.iterator();
         while (iterator.hasNext()) {
             PlayerData playerData = iterator.next();
@@ -102,17 +125,13 @@ public class ServerField extends Field {
             Properties properties = gamePiece.getProperties();
             List<String> modified = properties.getModifiedProperties();
             for (String key : modified) {
+                if (properties.getId(key) == null) continue;
                 for (PlayerData playerData : chunk.trackers)
                     playerData.channel.sendTCP(new PropertyPacket(gamePiece.getGameId(), properties.getId(key), properties.get(key)), null).perform();
                 for (PlayerData playerData : chunk.softTrackers)
                     playerData.channel.sendTCP(new PropertyPacket(gamePiece.getGameId(), properties.getId(key), properties.get(key)), null).perform();
             }
             modified.clear();
-        }
-
-
-        for (PlayerData playerData : players) {
-            playerData.hasShot = false;
         }
     }
 }

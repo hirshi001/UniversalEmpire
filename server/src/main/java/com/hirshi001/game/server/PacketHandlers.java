@@ -1,17 +1,19 @@
 package com.hirshi001.game.server;
 
-import com.hirshi001.game.shared.entities.Fireball;
-import com.hirshi001.game.shared.entities.Player;
+import com.hirshi001.game.shared.control.TroopGroup;
+import com.hirshi001.game.shared.entities.troop.Knight;
+import com.hirshi001.game.shared.entities.troop.Troop;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
-import com.hirshi001.game.shared.game.GamePiece;
+import com.hirshi001.game.shared.entities.GamePiece;
+import com.hirshi001.game.shared.game.PlayerData;
 import com.hirshi001.game.shared.packets.*;
 import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.props.Properties;
-import com.hirshi001.networking.packet.DataPacket;
-import com.hirshi001.networking.packet.Packet;
 import com.hirshi001.networking.packethandlercontext.PacketHandlerContext;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 public class PacketHandlers {
 
@@ -42,54 +44,21 @@ public class PacketHandlers {
 
         PlayerData playerData = new PlayerData();
         playerData.field = field;
-        playerData.player = new Player();
-        playerData.player.bounds.setPosition(1F, 1F);
         playerData.channel = ctx.channel;
+        playerData.controllerId = field.getNextControllerId();
 
         ctx.channel.attach(playerData);
 
         field.players.add(playerData);
-        field.addGamePiece(playerData.player);
-        ctx.channel.sendTCP(new GameInitPacket(playerData.player.getGameId()).setResponsePacket(ctx.packet), null).perform();
+        ctx.channel.sendTCP(new GameInitPacket(playerData.controllerId).setResponsePacket(ctx.packet), null).perform();
 
-    }
-
-    public static void handlePlayerMovePacket(final PacketHandlerContext<PlayerMovePacket> ctx) {
-        PlayerData playerData = (PlayerData) ctx.channel.getAttachment();
-        Player player = playerData.player;
-
-        if (player==null || player.lastTickUpdate > ctx.packet.tick) return;
-
-        player.lastTickUpdate = ctx.packet.tick;
-        GameSettings.runnablePoster.postRunnable(() -> {
-            if (player.lastTickUpdate > ctx.packet.tick) return;
-            player.bounds.setPosition(ctx.packet.newX, ctx.packet.newY);
-            player.update();
-
-            ServerChunk chunk = (ServerChunk) player.chunk;
-            // data packets do not work right now
-
-            /*
-            DataPacket<PlayerMovePacket> dataPacket = DataPacket.of(
-                    ServerLauncher.bufferFactory.buffer(20),
-                    new PlayerMovePacket(player.bounds.x, player.bounds.y, player.getGameId(), player.lastTickUpdate)
-            );
-             */
-
-            Packet packet =  new PlayerMovePacket(player.bounds.x, player.bounds.y, player.getGameId(), player.lastTickUpdate);
-
-
-            for (PlayerData data : chunk.trackers) {
-                if (data == playerData) continue;
-                if(data.channel.supportsUDP()) data.channel.sendUDP(packet, null).perform();
-                else data.channel.sendTCP(packet, null).perform();
-            }
-            for (PlayerData data : chunk.softTrackers) {
-                if (data == playerData) continue;
-                if (data.channel.supportsUDP()) data.channel.sendUDP(packet, null).perform();
-                else data.channel.sendTCP(packet, null).perform();
-            }
-        });
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        for (int i = 0; i < 4; i++) {
+            Knight knight = new Knight();
+            knight.setControllerId(playerData.controllerId);
+            knight.bounds.setPosition(random.nextInt(-5, 10), random.nextInt(-5, 10));
+            field.addGamePiece(knight);
+        }
 
     }
 
@@ -104,23 +73,41 @@ public class PacketHandlers {
         ctx.channel.sendTCP(new PropertyNamePacket(packet.gamePieceId, packet.propertyId, name, value), null).perform();
     }
 
-    public static void handleShootPacket(PacketHandlerContext<ShootPacket> ctx) {
+    public static void handleTroopGroupPacket(PacketHandlerContext<TroopGroupPacket> ctx) {
+        ServerField field = ServerLauncher.field;
+        TroopGroupPacket packet = ctx.packet;
         PlayerData playerData = (PlayerData) ctx.channel.getAttachment();
 
-        if(playerData.hasShot) return;
-        playerData.hasShot = true;
+        TroopGroup findTroopGroup = new TroopGroup(field, packet.name, playerData.controllerId);
 
-        Player player = playerData.player;
+        GameSettings.runnablePoster.postRunnable( ()-> {
+            try {
+                if (packet.type == TroopGroupPacket.OperationType.CREATE) {
+                    playerData.troopGroups.put(findTroopGroup, findTroopGroup);
+                }
 
-        ServerField field = ServerLauncher.field;
-        Fireball fireball = new Fireball(player.getCenterX(), player.getCenterY());
-        fireball.maxTime(2F);
-        fireball.setSpeed(30F);
-        fireball.setAngle(ctx.packet.angle);
-        fireball.setRadius(0.05F);
-        fireball.setOwnerId(player.getGameId());
+                if (packet.type == TroopGroupPacket.OperationType.ADD || packet.type == TroopGroupPacket.OperationType.CREATE) {
+                    TroopGroup troopGroup = playerData.troopGroups.get(findTroopGroup);
+                    for (int i = 0; i < packet.troopIds.length; i++) {
+                        GamePiece piece = field.getGamePiece(packet.troopIds[i]);
+                        if (piece instanceof Troop) troopGroup.addTroop((Troop) piece);
+                    }
+                }
 
-        field.addGamePiece(fireball);
+                if (packet.type == TroopGroupPacket.OperationType.REMOVE) {
+                    TroopGroup troopGroup = playerData.troopGroups.get(findTroopGroup);
+                    for (int i = 0; i < packet.troopIds.length; i++) {
+                        GamePiece piece = field.getGamePiece(packet.troopIds[i]);
+                        if (piece instanceof Troop) troopGroup.removeTroop((Troop) piece);
+                    }
+                }
+
+                if (packet.type == TroopGroupPacket.OperationType.DELETE) {
+                    playerData.troopGroups.remove(findTroopGroup);
+                }
+            }catch (Exception e){e.printStackTrace();}
+        });
+
     }
 
 

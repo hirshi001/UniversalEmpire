@@ -14,7 +14,7 @@ public class ServerChunkLoader implements ChunkLoader{
         for(i = 0; i < chunkSize; i++){
             for(j = 0; j < chunkSize; j++){
                 double random = Math.random();
-                if(random < 0.5) tiles[i][j] = Tiles.STONE;
+                if(random < 0.1) tiles[i][j] = Tiles.STONE;
                 else tiles[i][j] = Tiles.GRASS;
             }
         }

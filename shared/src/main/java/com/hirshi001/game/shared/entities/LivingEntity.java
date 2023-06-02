@@ -1,7 +1,5 @@
 package com.hirshi001.game.shared.entities;
 
-import com.hirshi001.game.shared.game.Field;
-
 public class LivingEntity extends Entity{
 
     public LivingEntity() {
@@ -34,5 +32,13 @@ public class LivingEntity extends Entity{
 
     public void damage(float damage){
         setHealth(getHealth()-damage);
+    }
+
+    public void setSpeed(float speed){
+        getProperties().put("speed", speed);
+    }
+
+    public float getSpeed(){
+        return getProperties().get("speed", 0F);
     }
 }

@@ -1,6 +1,7 @@
 package com.hirshi001.game.shared.game;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.shared.util.HashedPoint;
 
@@ -13,6 +14,7 @@ public class Chunk{
 
     public final Set<GamePiece> items = new HashSet<>();
     private final Tile[][] tiles;
+
     public Field field;
     private int chunkSize;
 
@@ -42,6 +44,14 @@ public class Chunk{
             tileGamePieces.put(tempPoint, tileGamePiece);
         }
         else tileGamePieces.put(new HashedPoint(col, row), tileGamePiece);
+    }
+
+    public Tile getTile(int col, int row) {
+        return tiles[col][row];
+    }
+
+    public Tile getTileFromWorldCoords(int col, int row) {
+        return tiles[col - getChunkX() * getChunkSize()][row - getChunkY() * getChunkSize()];
     }
 
     public Tile[][] getTiles() {

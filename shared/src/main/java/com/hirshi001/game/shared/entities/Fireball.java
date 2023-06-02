@@ -6,8 +6,8 @@ import com.dongbat.jbump.Collisions;
 import com.dongbat.jbump.Item;
 import com.dongbat.jbump.Response;
 import com.hirshi001.buffer.buffers.ByteBuffer;
+import com.hirshi001.game.shared.entities.troop.Knight;
 import com.hirshi001.game.shared.game.Field;
-import com.hirshi001.game.shared.game.GamePiece;
 import com.hirshi001.game.shared.settings.GameSettings;
 
 public class Fireball extends Entity {
@@ -15,10 +15,13 @@ public class Fireball extends Entity {
     protected LinePath.LinePathParam pathParam = new LinePath.LinePathParam();
     private static final CollisionFilter filter = (item, other) -> {
 
+        if(other instanceof Knight){
+            return Response.touch;
+        }
         GamePiece piece = (GamePiece) other;
         if (!piece.worldInteractable() || !piece.collides()) return null;
 
-        int id = piece.getProperties().get("ownId", -1);
+        int id = ((Fireball)item).getProperties().get("ownId", -1);
         if (id == piece.getGameId()) return null;
 
         return Response.touch;
@@ -58,10 +61,13 @@ public class Fireball extends Entity {
             bounds.x = result.goalX;
             bounds.y = result.goalY;
 
+            Collisions collisions = result.projectedCollisions;
+            System.out.println("Collisions: " + collisions.size() + " x: " + bounds.x + " y: " + bounds.y);
             if (field.isServer()) {
-                Collisions collisions = result.projectedCollisions;
-                if (collisions.size() > 0 && field.isServer()) {
+                if (collisions.size() > 0) {
+                    alive = false;
                     field.removeGamePiece(this);
+                    System.out.println("Removed fireball");
                     collisions.sort();
                     Item item = collisions.get(0).other;
                     if (item instanceof LivingEntity) {

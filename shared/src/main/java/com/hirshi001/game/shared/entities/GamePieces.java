@@ -1,6 +1,6 @@
 package com.hirshi001.game.shared.entities;
 
-import com.hirshi001.game.shared.game.GamePiece;
+import com.hirshi001.game.shared.entities.troop.Knight;
 import com.hirshi001.game.shared.registry.DefaultRegistry;
 import com.hirshi001.game.shared.registry.ID;
 import com.hirshi001.game.shared.registry.ObjectHolderSupplier;
@@ -13,23 +13,27 @@ import java.util.function.Supplier;
 public class GamePieces {
 
     public static final Registry<ObjectHolderSupplier<GamePiece>> registry = new DefaultRegistry<>();
+
+    @SuppressWarnings("rawtypes")
     public static final Map<Class, Integer> ID_MAP = new HashMap<>();
 
     public static ObjectHolderSupplier<CircleGamePiece> CIRCLE_GAME_PIECE;
-    public static ObjectHolderSupplier<Player> PLAYER;
     public static ObjectHolderSupplier<TestGamePiece> TEST_GAME_PIECE;
     public static ObjectHolderSupplier<Fireball> FIREBALL;
     public static ObjectHolderSupplier<Knight> KNIGHT;
+    public static ObjectHolderSupplier<SolidTile> SOLID_TILE;
 
-    public static void register(){
+    @SuppressWarnings({"unchecked"})
+    public static void register() {
         CIRCLE_GAME_PIECE = register(CircleGamePiece.class, CircleGamePiece::new, 0);
-        PLAYER = register(Player.class, Player::new, 1);
-        TEST_GAME_PIECE = register(TestGamePiece.class, TestGamePiece::new, 2);
-        FIREBALL = register(Fireball.class, Fireball::new, 3);
-        KNIGHT = register(Knight.class, Knight::new, 4);
+        TEST_GAME_PIECE = register(TestGamePiece.class, TestGamePiece::new, 1);
+        FIREBALL = register(Fireball.class, Fireball::new, 2);
+        KNIGHT = register(Knight.class, Knight::new, 3);
+        SOLID_TILE = register(SolidTile.class, SolidTile::new, 4);
     }
 
-    private static <T extends GamePiece> ObjectHolderSupplier register(Class<T> clazz, Supplier<T> entitySupplier, int id){
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static <T extends GamePiece> ObjectHolderSupplier register(Class<T> clazz, Supplier<T> entitySupplier, int id) {
         ObjectHolderSupplier supplier = new ObjectHolderSupplier() {
             @Override
             protected ID create() {
@@ -41,11 +45,11 @@ public class GamePieces {
         return supplier;
     }
 
-    public static int getId(GamePiece gamePiece){
+    public static int getId(GamePiece gamePiece) {
         return getId(gamePiece.getClass());
     }
 
-    public static int getId(Class<? extends GamePiece> clazz){
+    public static int getId(Class<? extends GamePiece> clazz) {
         return ID_MAP.get(clazz);
     }
 

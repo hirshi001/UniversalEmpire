@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.game.PacketHandlers;
+import com.hirshi001.game.screens.maingamescreen.MainGameScreen;
 import com.hirshi001.game.shared.packets.*;
 import com.hirshi001.game.shared.settings.Network;
 import com.hirshi001.networking.network.channel.AbstractChannelListener;
@@ -14,7 +15,6 @@ import com.hirshi001.networking.network.client.Client;
 import com.hirshi001.networking.networkdata.DefaultNetworkData;
 import com.hirshi001.networking.networkdata.NetworkData;
 import com.hirshi001.networking.packethandlercontext.PacketHandlerContext;
-import com.hirshi001.networking.packethandlercontext.PacketType;
 import com.hirshi001.networking.packetregistrycontainer.PacketRegistryContainer;
 import com.hirshi001.networking.packetregistrycontainer.SinglePacketRegistryContainer;
 import com.hirshi001.restapi.RestFuture;
@@ -39,15 +39,14 @@ public class ConnectingScreen extends GameScreen {
                 .register(JoinGamePacket::new, null, JoinGamePacket.class, 2)
                 .register(GameInitPacket::new, PacketHandlers::handleGameInitPacket, GameInitPacket.class, 3)
                 .register(GamePieceSpawnPacket::new, PacketHandlers::handleGamePieceSpawnPacket, GamePieceSpawnPacket.class, 4)
-                .register(GamePieceDespawnPacket::new,  PacketHandlers::handleGamePieceDespawnPacket, GamePieceDespawnPacket.class, 5)
+                .register(GamePieceDespawnPacket::new, PacketHandlers::handleGamePieceDespawnPacket, GamePieceDespawnPacket.class, 5)
                 .register(SyncPacket::new, PacketHandlers::handleSyncPacket, SyncPacket.class, 6)
                 .register(PropertyPacket::new, PacketHandlers::handlePropertyPacket, PropertyPacket.class, 7)
                 .register(RequestPropertyNamePacket::new, null, RequestPropertyNamePacket.class, 8)
                 .register(PropertyNamePacket::new, PacketHandlers::handlePropertyNamePacket, PropertyNamePacket.class, 9)
-				.register(MaintainConnectionPacket::new, null, MaintainConnectionPacket.class, 10)
-                .register(PlayerMovePacket::new, PacketHandlers::handlePlayerMovePacket, PlayerMovePacket.class, 11)
-                .register(PingPacket::new, null, PingPacket.class, 12)
-                .register(ShootPacket::new, null, ShootPacket.class, 13);
+                .register(MaintainConnectionPacket::new, null, MaintainConnectionPacket.class, 10)
+                .register(PingPacket::new, null, PingPacket.class, 11)
+                .register(TroopGroupPacket::new, null, TroopGroupPacket.class, 12);
 
         NetworkData networkData = new DefaultNetworkData(Network.PACKET_ENCODER_DECODER, packetRegistryContainer);
         try {
@@ -59,7 +58,7 @@ public class ConnectingScreen extends GameScreen {
                 channel.setChannelOption(ChannelOption.DEFAULT_SWITCH_PROTOCOL, true);
             });
 
-            client.addClientListener(new AbstractChannelListener(){
+            client.addClientListeners(new AbstractChannelListener() {
                 @Override
                 public void onTCPConnect(Channel channel) {
                 }
@@ -95,7 +94,7 @@ public class ConnectingScreen extends GameScreen {
     @Override
     public void render(float delta) {
         ScreenUtils.clear(Color.RED);
-        if(connectFuture.isSuccess()){
+        if (connectFuture.isSuccess()) {
             try {
                 Gdx.app.log("ConnectingScreen", "TCP Connected to server");
                 app.client.startUDP().perform().get();
@@ -109,7 +108,7 @@ public class ConnectingScreen extends GameScreen {
         }
 
 
-        if(connectFuture.isFailure()){
+        if (connectFuture.isFailure()) {
             Gdx.app.log("ConnectingScreen", "Failed to connect to server");
             app.setScreen(new ErrorScreen(app, connectFuture.cause()));
         }

@@ -107,6 +107,11 @@ public class GameResources {
         return assetManager.get(atlasName, TextureAtlas.class).findRegion(name);
     }
 
+    public TextureAtlas getAtlas(){
+        if(atlasName==null) throw new IllegalStateException("No atlas was loaded");
+        return assetManager.get(atlasName, TextureAtlas.class);
+    }
+
     public boolean update() throws GdxRuntimeException {
         if (assets == null) {
             return false;

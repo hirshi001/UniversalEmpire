@@ -99,8 +99,11 @@ project(":html") {
 
 	task butlerPush(type: org.mini2Dx.butler.task.PushTask) {
 		dependsOn("dist")
-		binDirectory = new File("${project.rootDir}/html/build/dist");
+		binDirectory = file("${project.rootDir}/html/build/dist");
 		channel = "html"
+		doLast {
+			println "Pushed to https://${butler.user}.itch.io/${butler.game}"
+		}
 	}
 }
 

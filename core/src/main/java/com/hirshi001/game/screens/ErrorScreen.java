@@ -34,6 +34,7 @@ public class ErrorScreen extends GameScreen {
     public ErrorScreen(GameApp gameApp, Throwable cause) {
         super(gameApp);
         this.cause = cause;
+        cause.printStackTrace();
 
     }
 

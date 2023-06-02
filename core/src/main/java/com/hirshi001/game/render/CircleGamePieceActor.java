@@ -7,8 +7,8 @@ import com.hirshi001.game.shared.entities.CircleGamePiece;
 
 public class CircleGamePieceActor extends GamePieceActor<CircleGamePiece> {
 
-    public CircleGamePieceActor(CircleGamePiece gamePiece) {
-        super(gamePiece);
+    public CircleGamePieceActor(CircleGamePiece gamePiece, FieldRender fieldRender) {
+        super(gamePiece, fieldRender);
     }
 
     @Override

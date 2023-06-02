@@ -21,8 +21,9 @@ public class TileRenderers {
             STONE,
             SAND;
 
+    @SuppressWarnings("unchecked")
     public static void register() {
-        GameResources resources = GameApp.Game().gameResources;
+        GameResources resources = GameApp.gameResources;
         DEFAULT = register(new DefaultTileRenderer<>(Tiles.DEFAULT_TILE, getRegion(resources, "grass")));
         SNOW = register(new DefaultTileRenderer<>(Tiles.SNOW, getRegion(resources, "snow")));
         GRASS = register(new DefaultTileRenderer<>(Tiles.GRASS, getRegion(resources, "grass")));
