@@ -1,6 +1,7 @@
 package com.hirshi001.game.shared.entities;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Item;
 import com.dongbat.jbump.Response;
@@ -149,5 +150,9 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
     @Override
     public int hashCode() {
         return getGameId();
+    }
+
+    public boolean needsSync() {
+        return false;
     }
 }

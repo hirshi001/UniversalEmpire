@@ -1,17 +1,23 @@
 package com.hirshi001.game.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.utils.GdxRuntimeException;
-import com.badlogic.gdx.utils.JsonReader;
-import com.badlogic.gdx.utils.JsonValue;
-import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
+import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.*;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.game.GameResources;
+import com.hirshi001.game.util.FreetypeFontGeneratorSerializer;
 
 import java.io.IOException;
 
@@ -23,6 +29,8 @@ public class FirstScreen extends GameScreen {
 	Sprite titleSprite;
 	boolean isWaiting = false;
 
+	AssetManager loader;
+
 	public FirstScreen(GameApp gameApp) {
 		super(gameApp);
 
@@ -31,10 +39,24 @@ public class FirstScreen extends GameScreen {
 	@Override
 	public void show() {
 		batch = new SpriteBatch();
-		if(app.gameResources == null){
+		if(GameApp.gameResources == null){
 			JsonReader jsonReader = new JsonReader();
 			JsonValue base = jsonReader.parse(Gdx.files.internal("resources/GameElements/ResourceMap.json"));
-			app.gameResources = new GameResources(base);
+			GameApp.gameResources = new GameResources(base);
+		}
+		if(GameApp.guiSkin == null){
+
+			GameApp.guiSkin = new Skin(Gdx.files.internal("skins/GUISkin.json")) {
+				//Override json loader to process FreeType fonts from skin JSON
+				@Override
+				protected Json getJsonLoader(final FileHandle skinFile) {
+					Json json = super.getJsonLoader(skinFile);
+					final Skin skin = this;
+					json.setSerializer(FreeTypeFontGenerator.class, new FreetypeFontGeneratorSerializer(skin, skinFile));
+					return json;
+				}
+			};
+
 		}
 
 		titleSprite = new Sprite(new Texture("resources/StartScreen/UniversalEmpireTitle.png"));

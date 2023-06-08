@@ -31,9 +31,15 @@ gwt {
 }
 
 dependencies {
-	implementation "com.badlogicgames.gdx:gdx-backend-gwt:$gdxVersion"
-	implementation "com.badlogicgames.gdx:gdx-backend-gwt:$gdxVersion:sources"
+
+    implementation "com.github.tommyettinger:gdx-backend-gwt:1.1100.1"
+    implementation "com.github.tommyettinger:gdx-backend-gwt:1.1100.1:sources"
+    implementation "com.google.jsinterop:jsinterop-annotations:2.0.0:sources"
+
+	// implementation "com.badlogicgames.gdx:gdx-backend-gwt:$gdxVersion"
+	// implementation "com.badlogicgames.gdx:gdx-backend-gwt:$gdxVersion:sources"
 	implementation "com.badlogicgames.gdx:gdx:$gdxVersion:sources"
+
 
     implementation "com.github.hirshi001:GWTRestAPI:$gwtRestApiVersion"
     implementation "com.github.hirshi001:GWTRestAPI:$gwtRestApiVersion:sources"
@@ -52,6 +58,14 @@ dependencies {
 
     implementation "com.badlogicgames.gdx:gdx-ai:$aiVersion:sources"
     implementation "com.github.tommyettinger:jbump:$jbumpVersion:sources"
+
+    implementation "com.github.intrigus.gdx-freetype-gwt:gdx-freetype-gwt:$gwtFreetypeVersion"
+    implementation "com.github.intrigus.gdx-freetype-gwt:gdx-freetype-gwt:$gwtFreetypeVersion:sources"
+
+    implementation "com.github.raeleus.TenPatch:tenpatch:$tenPatchVersion:sources"
+
+    implementation "com.github.tommyettinger:textratypist:$textraTypistVersion:sources"
+    implementation "com.github.tommyettinger:regexodus:$regexodusVersion:sources"
 
 	implementation project(':core')
 

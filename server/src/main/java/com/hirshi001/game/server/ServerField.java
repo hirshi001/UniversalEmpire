@@ -35,7 +35,7 @@ public class ServerField extends Field {
 
     @Override
     public Chunk loadChunk(int x, int y) {
-        Chunk chunk = loader.loadChunk(getChunkSize(), new HashedPoint(x, y));
+        Chunk chunk = loader.loadChunk(new HashedPoint(x, y));
         if (chunk != null) chunk.field = this;
         return chunk;
     }
@@ -113,7 +113,7 @@ public class ServerField extends Field {
 
         for (GamePiece gamePiece : getItems()) {
             ServerChunk chunk = (ServerChunk) gamePiece.chunk;
-            if (!gamePiece.isStatic()) {
+            if (!gamePiece.isStatic() && gamePiece.needsSync()) {
                 for (PlayerData playerData : chunk.trackers) {
                     playerData.channel.sendUDP(new SyncPacket(time, gamePiece), null).perform();
                 }

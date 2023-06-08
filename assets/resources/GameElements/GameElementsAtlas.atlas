@@ -6,175 +6,182 @@ filter: Nearest, Nearest
 repeat: none
 entities/arrow/arrow
   rotate: false
-  xy: 132, 150
+  xy: 166, 203
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 entities/bullet/Bullet
   rotate: false
-  xy: 2, 88
+  xy: 2, 107
   size: 128, 128
   orig: 128, 128
   offset: 0, 0
   index: -1
 entities/knight/wood/woodKnight1
   rotate: false
-  xy: 1064, 664
+  xy: 2, 5
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 entities/knight/wood/woodKnight2
   rotate: false
-  xy: 2, 20
+  xy: 36, 73
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 entities/knight/wood/woodKnight3
   rotate: false
-  xy: 2, 54
+  xy: 132, 203
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 entities/knight/wood/woodKnight4
   rotate: false
-  xy: 166, 184
+  xy: 1030, 617
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 entities/knight/wood/woodKnight5
   rotate: false
-  xy: 1030, 664
+  xy: 1096, 717
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 entities/knight/wood/woodKnight6
   rotate: false
-  xy: 1098, 698
+  xy: 36, 39
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 entities/knight/wood/woodKnight7
   rotate: false
-  xy: 36, 54
+  xy: 132, 169
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 entities/player/player-1
   rotate: false
-  xy: 1030, 630
+  xy: 1130, 717
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 entities/player/player-2
   rotate: false
-  xy: 1064, 698
+  xy: 2, 39
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 gui/Button
   rotate: false
-  xy: 132, 184
+  xy: 1030, 651
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 gui/Gui
   rotate: false
-  xy: 132, 132
+  xy: 132, 151
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 gui/TextInput
   rotate: false
-  xy: 1030, 698
+  xy: 2, 73
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 gui/UpArrow
   rotate: false
-  xy: 70, 70
+  xy: 70, 89
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 gui/WhitePixel
   rotate: false
-  xy: 1098, 695
+  xy: 2, 2
   size: 1, 1
   orig: 1, 1
   offset: 0, 0
   index: -1
 gui/exit
   rotate: false
-  xy: 1064, 652
+  xy: 1164, 739
   size: 10, 10
   orig: 10, 10
   offset: 0, 0
   index: -1
 opensans-16
   rotate: false
-  xy: 516, 218
+  xy: 516, 237
   size: 512, 512
   orig: 512, 512
   offset: 0, 0
   index: -1
 opensans-64
   rotate: false
-  xy: 2, 218
+  xy: 2, 237
   size: 512, 512
   orig: 512, 512
   offset: 0, 0
   index: -1
 opensans-32
   rotate: false
-  xy: 2, 218
+  xy: 2, 237
   size: 512, 512
   orig: 512, 512
   offset: 0, 0
   index: -1
+resources/rock
+  rotate: false
+  xy: 1030, 685
+  size: 64, 64
+  orig: 64, 64
+  offset: 0, 0
+  index: -1
 tiles/grass
   rotate: false
-  xy: 1030, 612
+  xy: 1030, 599
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 tiles/ground
   rotate: false
-  xy: 2, 2
+  xy: 1064, 667
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 tiles/snow
   rotate: false
-  xy: 166, 166
+  xy: 166, 185
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 tiles/wall
   rotate: false
-  xy: 200, 200
+  xy: 200, 219
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 tiles/water
   rotate: false
-  xy: 36, 36
+  xy: 1096, 699
   size: 16, 16
   orig: 16, 16
   offset: 0, 0

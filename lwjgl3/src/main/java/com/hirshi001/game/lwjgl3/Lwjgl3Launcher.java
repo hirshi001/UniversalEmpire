@@ -23,7 +23,7 @@ public class Lwjgl3Launcher {
 		String ip;
 		int port;
 		if(args.length==0) {
-			ip = "localhost";
+			ip = "localhost";//"game.hrishislife.com";
 			port = 3000;
 		} else {
 			ip = args[0];

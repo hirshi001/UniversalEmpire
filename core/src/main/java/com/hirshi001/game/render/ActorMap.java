@@ -1,11 +1,8 @@
 package com.hirshi001.game.render;
 
 import com.hirshi001.game.render.tilerenderers.SolidTileActor;
-import com.hirshi001.game.shared.entities.CircleGamePiece;
-import com.hirshi001.game.shared.entities.Fireball;
-import com.hirshi001.game.shared.entities.SolidTile;
+import com.hirshi001.game.shared.entities.*;
 import com.hirshi001.game.shared.entities.troop.Knight;
-import com.hirshi001.game.shared.entities.GamePiece;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +16,7 @@ public class ActorMap {
         register(CircleGamePiece.class, CircleGamePieceActor::new);
         register(Knight.class, KnightActor::new);
         register(SolidTile.class, SolidTileActor::new);
+        register(Stone.class, StoneActor::new);
 
         KnightActor.loadAnimation();
     }

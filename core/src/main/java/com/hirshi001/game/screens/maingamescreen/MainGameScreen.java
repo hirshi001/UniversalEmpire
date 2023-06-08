@@ -70,7 +70,7 @@ public class MainGameScreen extends GameScreen {
 
 
 
-        guiStage.setDebugAll(true);
+        // guiStage.setDebugAll(true);
 
 
     }

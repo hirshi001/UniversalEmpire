@@ -4,6 +4,6 @@ import com.hirshi001.game.shared.util.HashedPoint;
 
 public interface ChunkLoader {
 
-    public ServerChunk loadChunk(int chunkSize, HashedPoint point);
+    public ServerChunk loadChunk(HashedPoint point);
 
 }

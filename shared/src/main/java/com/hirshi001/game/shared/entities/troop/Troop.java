@@ -1,5 +1,7 @@
 package com.hirshi001.game.shared.entities.troop;
 
+import com.badlogic.gdx.ai.utils.Location;
+import com.badlogic.gdx.math.Vector;
 import com.badlogic.gdx.math.Vector2;
 import com.dongbat.jbump.CollisionFilter;
 import com.dongbat.jbump.Response;
@@ -41,7 +43,7 @@ public abstract class Troop extends LivingEntity {
     @Override
     public void setField(Field field) {
         super.setField(field);
-        this.bounds.setSize(0.8F, 0.98F);
+        this.bounds.setSize(0.8F, 0.8F);
         update();
     }
 
@@ -138,4 +140,5 @@ public abstract class Troop extends LivingEntity {
     public CollisionFilter getCollisionFilter() {
         return DEFAULT_FILTER;
     }
+
 }

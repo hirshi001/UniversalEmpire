@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.dongbat.jbump.IntPoint;
 import com.dongbat.jbump.World;
 import com.hirshi001.game.shared.control.TroopGroup;
@@ -231,7 +232,7 @@ public abstract class Field extends World {
         if (chunk == null) {
             return;
         }
-        chunk.add(gamePiece);
+        chunk.add(gamePiece); // it's okay if the game piece is already in the chunk
 
         if (gamePiece.worldInteractable()) {
             add(gamePiece, gamePiece.bounds.x, gamePiece.bounds.y, gamePiece.bounds.width, gamePiece.bounds.height);
@@ -349,6 +350,11 @@ public abstract class Field extends World {
         if (chunk == null) return null;
         chunks.put(chunk.chunkPosition, chunk);
         chunk.field = this;
+        if (isServer()) {
+            for(GamePiece gamePiece : chunk.itemsToAdd) {
+                addGamePiece(gamePiece);
+            }
+        }
         for (GamePiece gamePiece : chunk.items) {
             addGamePiece(gamePiece, gamePiece.getGameId());
         }
@@ -449,7 +455,7 @@ public abstract class Field extends World {
                 if (newChunk != chunk) {
                     // chunk.remove(gamePiece);
                     iterator.remove();
-                    if(newChunk!=null) newChunk.add(gamePiece);
+                    if (newChunk != null) newChunk.add(gamePiece);
                 }
             }
         }

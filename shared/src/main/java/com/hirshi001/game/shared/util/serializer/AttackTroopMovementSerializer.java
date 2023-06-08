@@ -12,7 +12,7 @@ public class AttackTroopMovementSerializer implements ByteBufSerializer<AttackTr
 
     @Override
     public AttackTroopMovement deserialize(ByteBuffer buffer) {
-        AttackTroopMovement object = new AttackTroopMovement(null);
+        AttackTroopMovement object = new AttackTroopMovement();
         object.targetId = buffer.readInt();
         return object;
     }

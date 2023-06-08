@@ -33,6 +33,8 @@ public class ClientField extends Field {
     private final Vector2 position = new Vector2();
     public FieldRender fieldRender;
 
+    public int chunkLoadRadius = 2;
+
     public Vector2 getPosition() {
         return position;
     }
@@ -61,11 +63,8 @@ public class ClientField extends Field {
         return playerData.troopGroups.get(new TroopGroup(this, name, getControllerId()));
     }
 
-    public void addTroopsToGroup(TroopGroup troopGroup, Array<Troop> troops) {
-        for(Troop troop : troops) {
-            troopGroup.addTroop(troop);
-        }
-        Packet packet = new TroopGroupPacket(TroopGroupPacket.OperationType.ADD, troopGroup.name, troops);
+    public void addTroopsToGroup(TroopGroup troopGroup) {
+        Packet packet = new TroopGroupPacket(TroopGroupPacket.OperationType.ADD, troopGroup.name, troopGroup.getDirtyTroops());
         client.getChannel().sendDeferred(packet, null, PacketType.TCP);
     }
 
@@ -107,8 +106,9 @@ public class ClientField extends Field {
             else
                 client.getChannel().sendDeferred(new MaintainConnectionPacket(), null, PacketType.TCP);
         }
+
         Point chunkP = getChunkPosition(position.x, position.y);
-        int s = 2;
+        int s = chunkLoadRadius;
         for (int i = -s; i <= s; i++) {
             for (int j = -s; j <= s; j++) {
                 Chunk chunk = addChunk(chunkP.x + i, chunkP.y + j);

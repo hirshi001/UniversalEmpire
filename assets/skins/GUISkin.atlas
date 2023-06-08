@@ -1,0 +1,182 @@
+
+GUISkin.png
+size: 512, 512
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+white-pixel
+  rotate: false
+  xy: 509, 507
+  size: 1, 1
+  orig: 1, 1
+  offset: 0, 0
+  index: -1
+Lato-Regular
+  rotate: false
+  xy: 1, 334
+  size: 506, 174
+  orig: 506, 174
+  offset: 0, 0
+  index: -1
+Button
+  rotate: false
+  xy: 1, 300
+  size: 32, 32
+  split: 12, 12, 12, 12
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+ButtonDown
+  rotate: false
+  xy: 35, 300
+  size: 32, 32
+  split: 12, 12, 12, 12
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+ButtonOver
+  rotate: false
+  xy: 1, 266
+  size: 32, 32
+  split: 12, 12, 12, 12
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+CheckboxOff
+  rotate: false
+  xy: 1, 198
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+CheckboxOffOver
+  rotate: false
+  xy: 69, 266
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+CheckboxOn
+  rotate: false
+  xy: 103, 300
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+CheckboxOnOver
+  rotate: false
+  xy: 35, 232
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+Gui
+  rotate: false
+  xy: 35, 180
+  size: 16, 16
+  split: 4, 4, 4, 4
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+HScrollBar
+  rotate: false
+  xy: 69, 232
+  size: 32, 32
+  split: 11, 11, 15, 15
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+HScrollPaneKnob
+  rotate: false
+  xy: 1, 130
+  size: 32, 32
+  split: 11, 11, 15, 15
+  pad: 11, 13, 15, 15
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+ProgressBarBackground
+  rotate: false
+  xy: 1, 164
+  size: 32, 32
+  split: 9, 9, 15, 15
+  pad: 0, 0, 0, 0
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+ProgressBarKnob
+  rotate: false
+  xy: 35, 198
+  size: 32, 32
+  split: 12, 12, 15, 15
+  pad: 0, 0, 0, 0
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+SliderBackground
+  rotate: false
+  xy: 35, 266
+  size: 32, 32
+  split: 15, 15, 15, 15
+  pad: 0, 0, 0, 0
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+SliderKnob
+  rotate: false
+  xy: 69, 300
+  size: 32, 32
+  split: 15, 15, 15, 15
+  pad: 0, 0, 0, 0
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+SmallButton
+  rotate: false
+  xy: 69, 222
+  size: 8, 8
+  split: 3, 3, 3, 3
+  orig: 8, 8
+  offset: 0, 0
+  index: -1
+SmallButtonDown
+  rotate: false
+  xy: 103, 256
+  size: 8, 8
+  split: 3, 3, 3, 3
+  orig: 8, 8
+  offset: 0, 0
+  index: -1
+SmallButtonHover
+  rotate: false
+  xy: 137, 290
+  size: 8, 8
+  split: 3, 3, 3, 3
+  orig: 8, 8
+  offset: 0, 0
+  index: -1
+TextInput
+  rotate: false
+  xy: 1, 232
+  size: 32, 32
+  split: 6, 6, 6, 6
+  pad: 6, 6, 3, 3
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+VScrollBar
+  rotate: false
+  xy: 103, 266
+  size: 32, 32
+  split: 15, 15, 11, 11
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+VScrollPaneKnob
+  rotate: false
+  xy: 137, 300
+  size: 32, 32
+  split: 15, 15, 13, 13
+  orig: 32, 32
+  offset: 0, 0
+  index: -1

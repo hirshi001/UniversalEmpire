@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.hirshi001.buffer.bufferfactory.BufferFactory;
@@ -32,6 +33,7 @@ public class GameApp extends Game {
 
 	public static Client client;
 	public static GameResources gameResources;
+	public static Skin guiSkin;
 	public static ClientField field;
 	public static FieldRender fieldRenderer;
 	public Disposable disposeWhenClose;

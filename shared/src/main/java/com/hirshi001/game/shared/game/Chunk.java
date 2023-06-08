@@ -13,6 +13,7 @@ public class Chunk{
     public final HashedPoint chunkPosition;
 
     public final Set<GamePiece> items = new HashSet<>();
+    public final List<GamePiece> itemsToAdd = new ArrayList<>();
     private final Tile[][] tiles;
 
     public Field field;
@@ -66,6 +67,15 @@ public class Chunk{
         item.chunk = this;
         if(bounds.contains(item.getCenterX(), item.getCenterY())){
             items.add(item);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean addToItemsToAdd(GamePiece item) {
+        item.chunk = this;
+        if(bounds.contains(item.getCenterX(), item.getCenterY())){
+            itemsToAdd.add(item);
             return true;
         }
         return false;

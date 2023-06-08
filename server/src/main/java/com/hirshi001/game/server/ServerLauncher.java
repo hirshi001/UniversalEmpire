@@ -161,18 +161,18 @@ public class ServerLauncher {
 
         System.out.println("JavaServer started on " + javaServer.getPort());
 
-        field = new ServerField(websocketServer, new ServerChunkLoader(), GameSettings.CELL_SIZE, GameSettings.CHUNK_SIZE);
+        field = new ServerField(websocketServer, new ServerChunkLoader(GameSettings.CHUNK_SIZE), GameSettings.CELL_SIZE, GameSettings.CHUNK_SIZE);
         for (int i = -2; i <= 2; i++) {
             for (int j = -2; j <= 2; j++) {
                 field.addChunk(i, j);
             }
         }
         field.tick(1F);
-        for(int i=-10;i<=10;i+=2) {
-            Knight knight = new Knight();
-            knight.bounds.setPosition(i, i);
-            field.addGamePiece(knight);
-        }
+//        for(int i=-10;i<=10;i+=2) {
+//            Knight knight = new Knight();
+//            knight.bounds.setPosition(i, i);
+//            field.addGamePiece(knight);
+//        }
 
         Timer timer = new Timer();
         final long period = TimeUnit.SECONDS.toMillis(1) / GameSettings.TICKS_PER_SECOND;

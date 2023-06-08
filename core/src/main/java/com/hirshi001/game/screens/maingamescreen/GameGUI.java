@@ -4,31 +4,28 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.Cell;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.game.widgets.Styles;
 
-public class GameGUI extends Table {
+public class GameGUI extends Window {
 
     private static final int PIXEL_PAD = 5;
 
-    TextureRegion region;
     boolean includeQuitButton = false;
     int align = Align.left;
     Runnable onQuit;
 
-    public GameGUI() {
-        initRegion();
+    public GameGUI(String title, Skin skin) {
+        super(title, skin);
     }
 
 
-    public GameGUI(int quitButtonAlign, Runnable onQuit) {
-        initRegion();
+    public GameGUI(String title, Skin skin, int quitButtonAlign, Runnable onQuit) {
+        super(title, skin);
         this.includeQuitButton = true;
         if(Align.isLeft(quitButtonAlign)){
             align = Align.topLeft;
@@ -39,12 +36,6 @@ public class GameGUI extends Table {
         setClip(false);
         addQuitButton();
 
-    }
-
-    private void initRegion() {
-        region = GameApp.gameResources.getFromAtlas("gui/Gui");
-        NinePatch ninePatch = new NinePatch(region, PIXEL_PAD, PIXEL_PAD, PIXEL_PAD, PIXEL_PAD);
-        setBackground(new NinePatchDrawable(ninePatch));
     }
 
     public void reset() {

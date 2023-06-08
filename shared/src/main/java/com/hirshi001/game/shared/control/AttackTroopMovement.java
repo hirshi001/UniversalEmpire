@@ -8,13 +8,13 @@ public class AttackTroopMovement extends Movement {
 
     public int targetId;
 
-    public AttackTroopMovement(Troop troop){
-        super(troop);
+    public AttackTroopMovement(){
+        super();
 
     }
 
-    public AttackTroopMovement(Troop troop, int targetId){
-        super(troop);
+    public AttackTroopMovement(int targetId){
+        super();
         this.targetId = targetId;
     }
 

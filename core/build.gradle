@@ -2,5 +2,8 @@
 eclipse.project.name = appName + '-core'
 
 dependencies {
+	implementation "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+	implementation "com.github.raeleus.TenPatch:tenpatch:$tenPatchVersion"
+	implementation "com.github.tommyettinger:textratypist:$textraTypistVersion"
 	api project(':shared')
 }

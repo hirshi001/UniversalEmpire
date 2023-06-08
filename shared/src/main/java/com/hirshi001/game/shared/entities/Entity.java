@@ -87,6 +87,8 @@ public abstract class Entity extends GamePiece {
         return false;
     }
 
-
-
+    @Override
+    public boolean needsSync() {
+        return true;
+    }
 }

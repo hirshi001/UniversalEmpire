@@ -5,21 +5,16 @@ import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.utils.Align;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.game.shared.control.TroopGroup;
 import com.hirshi001.game.shared.util.stringutils.StringUtils;
-import com.hirshi001.game.widgets.Styles;
 
+import java.util.List;
 import java.util.*;
 
 public class TroopGroupDisplayGui extends Table {
@@ -27,7 +22,7 @@ public class TroopGroupDisplayGui extends Table {
     List<TroopGroup> displayTroopGroups;
     Set<TroopGroup> displaySet;
     Collection<TroopGroup> troopGroups;
-    GameGUI displayGui;
+    Window displayGui;
 
     TextureRegion arrowRegion;
     TroopGroupInfoGUI troopGroupInfoGUI = new TroopGroupInfoGUI();
@@ -38,7 +33,8 @@ public class TroopGroupDisplayGui extends Table {
         this.troopGroups = troopGroups;
         this.displayTroopGroups = new LinkedList<>(troopGroups);
         this.displaySet = new HashSet<>(troopGroups);
-        this.displayGui = new GameGUI();
+        this.displayGui = new Window("", GameApp.guiSkin);
+        displayGui.setKeepWithinStage(false);
         redo();
 
         arrowRegion = GameApp.gameResources.getFromAtlas("gui/UpArrow");
@@ -63,7 +59,8 @@ public class TroopGroupDisplayGui extends Table {
             }
         });
 
-        top();
+
+        center().top();
 
         add(displayGui).top().expandX().fillX();
         row();
@@ -110,11 +107,13 @@ public class TroopGroupDisplayGui extends Table {
     public void redo() {
         displayGui.reset();
         if (displayTroopGroups.isEmpty()) {
-            Label label = new Label("No groups have been created", Styles.labelStyle);
+            Label label = new Label("No groups have been created", GameApp.guiSkin);
             displayGui.add(label).expandX().padLeft(10F).left();
         }
+
+        TextButton.TextButtonStyle smallButtonStyle = GameApp.guiSkin.get("SmallButton", TextButton.TextButtonStyle.class);
         for (TroopGroup troopGroup : displayTroopGroups) {
-            Button button = new TextButton(StringUtils.DEFAULT().toString(troopGroup), Styles.textButtonStyle);
+            Button button = new TextButton(StringUtils.DEFAULT().toString(troopGroup), smallButtonStyle);
             button.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {

@@ -10,7 +10,7 @@ import com.hirshi001.networking.packet.ByteBufSerializable;
 
 public class TroopGroup implements ByteBufSerializable {
 
-    public Array<Troop> troops = new Array<>(), dirtyTroops = new Array<>();
+    public Array<Integer> troops = new Array<>(), dirtyTroops = new Array<>();
 
     public Field field;
     public String name;
@@ -23,33 +23,46 @@ public class TroopGroup implements ByteBufSerializable {
     }
 
     public void addTroop(Troop troop) {
-        if(troops.contains(troop, false)) return;
-        troops.add(troop);
-        dirtyTroops.add(troop);
-        troop.setGroup(this);
+        addTroop(troop.getGameId());
     }
 
-    public Array<Troop> getDirtyTroops() {
+    public void addTroop(int troopId) {
+        if (troops.contains(troopId, false)) return;
+        troops.add(troopId);
+        dirtyTroops.add(troopId);
+        Troop troop = (Troop) field.getGamePiece(troopId);
+        if (troop != null) troop.setGroup(this);
+    }
+
+
+    public Array<Integer> getDirtyTroops() {
         return dirtyTroops;
     }
 
     public void removeTroop(Troop troop) {
-        troops.removeValue(troop, false);
+        troops.removeValue(troop.getGameId(), false);
+    }
+
+    public void removeTroop(int troopId) {
+        troops.removeValue(troopId, false);
     }
 
     public void moveTroops(float destX, float destY, float radius) {
-        for (Troop troop : troops) {
+        for (Integer troopId : troops) {
             float x, y;
-            int i=0;
+            int i = 0;
             do {
                 x = destX + (MathUtils.random() * radius * 2 - radius);
                 y = destY + (MathUtils.random() * radius * 2 - radius);
                 i++;
-                if(i>5) break;
+                if (i > 5) break;
             }
-            while(field.getTile((int)Math.floor(x), (int)Math.floor(y)).isSolid);
+            while (field.getTile((int) Math.floor(x), (int) Math.floor(y)).isSolid);
 
-            troop.setMovement(new MoveTroopMovement(troop, x, y, 1F));
+            Troop troop = (Troop) field.getGamePiece(troopId);
+            if (troop != null) {
+                troop.setMovement(new MoveTroopMovement(x, y, 1F));
+            }
         }
     }
 
@@ -58,8 +71,8 @@ public class TroopGroup implements ByteBufSerializable {
         ByteBufUtil.writeStringToBuf(name, buffer);
         buffer.writeInt(playerControllerId);
         buffer.writeInt(troops.size);
-        for (Troop troop : troops) {
-            buffer.writeInt(troop.getGameId());
+        for (Integer troopId : troops) {
+            buffer.writeInt(troopId);
         }
     }
 
@@ -69,9 +82,8 @@ public class TroopGroup implements ByteBufSerializable {
         playerControllerId = buffer.readInt();
         int size = buffer.readInt();
         for (int i = 0; i < size; i++) {
-            int id = buffer.readInt();
-            Troop troop = (Troop) field.getGamePiece(id);
-            if (troop != null) troops.add(troop);
+            int troopId = buffer.readInt();
+            troops.add(troopId);
         }
     }
 

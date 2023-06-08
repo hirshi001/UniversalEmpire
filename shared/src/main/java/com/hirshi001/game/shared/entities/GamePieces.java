@@ -22,14 +22,17 @@ public class GamePieces {
     public static ObjectHolderSupplier<Fireball> FIREBALL;
     public static ObjectHolderSupplier<Knight> KNIGHT;
     public static ObjectHolderSupplier<SolidTile> SOLID_TILE;
+    public static ObjectHolderSupplier<Stone> STONE;
 
     @SuppressWarnings({"unchecked"})
     public static void register() {
-        CIRCLE_GAME_PIECE = register(CircleGamePiece.class, CircleGamePiece::new, 0);
-        TEST_GAME_PIECE = register(TestGamePiece.class, TestGamePiece::new, 1);
-        FIREBALL = register(Fireball.class, Fireball::new, 2);
-        KNIGHT = register(Knight.class, Knight::new, 3);
-        SOLID_TILE = register(SolidTile.class, SolidTile::new, 4);
+        int id = 0;
+        CIRCLE_GAME_PIECE = register(CircleGamePiece.class, CircleGamePiece::new, id++);
+        TEST_GAME_PIECE = register(TestGamePiece.class, TestGamePiece::new, id++);
+        FIREBALL = register(Fireball.class, Fireball::new, id++);
+        KNIGHT = register(Knight.class, Knight::new, id++);
+        SOLID_TILE = register(SolidTile.class, SolidTile::new, id++);
+        STONE = register(Stone.class, Stone::new, id++);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

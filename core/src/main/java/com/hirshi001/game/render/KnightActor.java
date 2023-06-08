@@ -21,7 +21,7 @@ public class KnightActor extends TroopActor<Knight> {
     }
 
     private static Animation<TextureRegion> loadAnimation(String type) {
-        GameResources resources = GameApp.Game().gameResources;
+        GameResources resources = GameApp.gameResources;
         int regionCount = 7;
         Array<TextureRegion> regions = new Array<>(regionCount);
         for (int i = 0; i < regionCount; i++) {
@@ -53,10 +53,12 @@ public class KnightActor extends TroopActor<Knight> {
         TextureRegion region = getAnimation().getKeyFrame(time);
 
         if (region != null) {
-            float x = displayPosition.x + gamePiece.bounds.width / 2F - 1F;
-            float y = displayPosition.y + gamePiece.bounds.height / 2F - 1F;
-            if (facingLeft) batch.draw(region, x, y, 2F, 2F);
-            else batch.draw(region, x + 2F, y, -2F, 2F);
+            float size = 1.5F;
+            float halfSize = size / 2F;
+            float x = displayPosition.x + gamePiece.bounds.width / 2F - halfSize;
+            float y = displayPosition.y + gamePiece.bounds.height / 2F - halfSize;
+            if (facingLeft) batch.draw(region, x, y, size, size);
+            else batch.draw(region, x + size, y, -size, size);
             super.render(batch, delta);
         }
     }

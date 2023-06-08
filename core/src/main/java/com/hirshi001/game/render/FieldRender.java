@@ -10,19 +10,23 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.hirshi001.game.ClientField;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.game.render.tilerenderers.TileRenderers;
 import com.hirshi001.game.screens.maingamescreen.GameGUI;
+import com.hirshi001.game.screens.maingamescreen.SettingsGUI;
 import com.hirshi001.game.screens.maingamescreen.TroopSelectedGui;
 import com.hirshi001.game.shared.entities.troop.Troop;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.tiles.Tile;
+import com.hirshi001.game.util.Settings;
 import com.hirshi001.game.widgets.PropertiesTextArea;
 import com.hirshi001.game.widgets.Styles;
 
@@ -44,6 +48,7 @@ public class FieldRender extends InputAdapter {
     PropertiesTextArea textArea = new PropertiesTextArea("");
 
     TroopSelectedGui selectionGUI;
+    SettingsGUI settingsGUI;
 
     public FieldRender(Field field) {
         super();
@@ -53,13 +58,16 @@ public class FieldRender extends InputAdapter {
         camera = (OrthographicCamera) viewport.getCamera();
         renderer = new ShapeRenderer();
 
-        stage = new Stage();
+        stage = new Stage(new ScreenViewport());
         stage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+
         table = new Table();
         table.setFillParent(true);
+        table.top().left();
+        table.add(textArea).grow().top().left().padTop(25).padLeft(20);
+
         stage.addActor(table);
 
-        table.add(textArea).grow().top().left();
 
         selectionGUI = new TroopSelectedGui();
         selectionGUI.setFillParent(true);
@@ -68,7 +76,7 @@ public class FieldRender extends InputAdapter {
 
     public void update(int screenWidth, int screenHeight) {
         viewport.update(screenWidth, screenHeight);
-        stage.getViewport().update(screenWidth, screenHeight);
+        stage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
     }
 
     public void debugRender() {
@@ -76,9 +84,12 @@ public class FieldRender extends InputAdapter {
         renderer.setProjectionMatrix(camera.combined);
         renderer.begin(ShapeRenderer.ShapeType.Line);
         renderer.setColor(Color.GREEN);
+        /*
         for (Chunk chunk : field.getChunks()) {
             renderer.rect(chunk.getBounds().x, chunk.getBounds().y, chunk.getBounds().width, chunk.getBounds().height);
         }
+
+         */
 
         for (GamePiece piece : field.getItems()) {
             renderer.setColor(Color.BLUE);
@@ -98,6 +109,7 @@ public class FieldRender extends InputAdapter {
         camera.position.x = Interpolation.linear.apply(camera.position.x, clientField.getPosition().x, 0.4f);
         camera.position.y = Interpolation.linear.apply(camera.position.y, clientField.getPosition().y, 0.4f);
         camera.update();
+        viewport.apply();
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
@@ -108,7 +120,12 @@ public class FieldRender extends InputAdapter {
 
         drawSelection(delta);
 
+
         drawProperties(delta);
+        stage.act(delta);
+        stage.getViewport().apply();
+
+        stage.draw();
 
 
     }
@@ -200,11 +217,11 @@ public class FieldRender extends InputAdapter {
                 textArea.setText(builder.toString());
                 textArea.setFillParent(true);
                 textArea.setMaxLength(10000);
+
+                table.invalidateHierarchy();
             }
         }
 
-        stage.act(delta);
-        stage.draw();
     }
 
 
@@ -218,7 +235,8 @@ public class FieldRender extends InputAdapter {
     @Override
     public boolean scrolled(float amountX, float amountY) {
         camera.zoom += amountY / 100F;
-        camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 5f);
+        camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 100f);
+        Settings.zoom.value = camera.zoom;
         camera.update();
         return true;
     }
@@ -309,6 +327,24 @@ public class FieldRender extends InputAdapter {
         }
 
         return false;
+    }
+
+    @Override
+    public boolean keyDown(int keycode) {
+        if(keycode==Input.Keys.ESCAPE){
+            Group root = GameApp.guiStage().getRoot();
+            if(settingsGUI==null){
+                settingsGUI = new SettingsGUI();
+            }
+            if(settingsGUI.getParent()==root) {
+                root.removeActor(settingsGUI);
+            }else{
+                settingsGUI.pack();
+                settingsGUI.setFillParent(true);
+                root.addActor(settingsGUI);
+            }
+        }
+        return super.keyDown(keycode);
     }
 
     private void updateEndDrag() {

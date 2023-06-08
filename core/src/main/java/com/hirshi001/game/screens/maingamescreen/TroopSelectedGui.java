@@ -10,27 +10,27 @@ import com.badlogic.gdx.utils.Array;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.game.shared.control.TroopGroup;
 import com.hirshi001.game.shared.entities.troop.Troop;
-import com.hirshi001.game.widgets.Styles;
 
 public class TroopSelectedGui extends Table {
 
     Array<Troop> selectedTroops;
-    BitmapFont font;
 
     TextButton createGroupButton, addToGroupButton;
 
-    GameGUI displayGUI = new GameGUI(Align.topLeft, ()->{
+    GameGUI displayGUI = new GameGUI("", GameApp.guiSkin, Align.topLeft, () -> {
         GameApp.removeGameGui(this);
         GameApp.fieldRenderer.selectedItems.clear();
     });
+
+    Table troopTable = new Table();
+    ScrollPane troopScroll = new ScrollPane(troopTable, GameApp.guiSkin);
 
 
     public TroopSelectedGui() {
         super();
         selectedTroops = new Array<>();
-        font = GameApp.gameResources.get("font-16");
 
-        createGroupButton = new TextButton("Create Group", Styles.textButtonStyle);
+        createGroupButton = new TextButton("Create Group", GameApp.guiSkin);
         createGroupButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -45,7 +45,7 @@ public class TroopSelectedGui extends Table {
                                 for (Troop troop : selectedTroops) {
                                     group.addTroop(troop);
                                 }
-                                Gdx.app.postRunnable( ()-> {
+                                Gdx.app.postRunnable(() -> {
                                     GameApp.field.addTroopGroup(group);
                                     GameApp.removeGameGui(gui);
                                 });
@@ -60,33 +60,52 @@ public class TroopSelectedGui extends Table {
                 });
             }
         });
+        displayGUI.add(createGroupButton).expandX().row();
 
-        addToGroupButton = new TextButton("Add to Group", Styles.textButtonStyle);
+        addToGroupButton = new TextButton("Add to Group", GameApp.guiSkin);
         addToGroupButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 Gdx.app.postRunnable(new Runnable() {
                     @Override
                     public void run() {
-                        InputGui inputGui = new InputGui("Group Name", new InputGui.InputListener() {
-                            @Override
-                            public void onInput(String input, InputGui gui) {
-                                TroopGroup group = GameApp.field.getTroopGroup(input);
-                                Gdx.app.postRunnable( ()-> {
-                                    GameApp.field.addTroopsToGroup(group, selectedTroops);
-                                    GameApp.removeGameGui(gui);
-                                });
-                            }
-                        });
-                        inputGui.setFillParent(true);
+                        Table table = new Table();
+                        table.setFillParent(true);
+                        table.center();
 
-                        GameApp.addGameGui(inputGui);
-                        inputGui.invalidate();
-                        inputGui.pack();
+                        Window window = new GameGUI("", GameApp.guiSkin, Align.topLeft, () -> GameApp.removeGameGui(table));
+                        window.setModal(true);
+                        window.setMovable(false);
+                        window.setResizable(false);
+
+                        window.add(new Label("Select Group To Add To", GameApp.guiSkin)).center().uniformX().row();
+                        for(TroopGroup group:GameApp.field.playerData.troopGroups.values()){
+                            TextButton button = new TextButton(group.name, GameApp.guiSkin);
+                            button.addListener(new ClickListener(){
+                                @Override
+                                public void clicked(InputEvent event, float x, float y) {
+                                    super.clicked(event, x, y);
+                                    for(Troop troop:selectedTroops){
+                                        group.addTroop(troop);
+                                    }
+                                    GameApp.removeGameGui(table);
+                                }
+                            });
+                            window.add(button).center().uniformX().row();
+                        }
+
+                        table.add(window).center().row();
+                        GameApp.addGameGui(table);
                     }
                 });
             }
         });
+
+        displayGUI.add(addToGroupButton).expandX().row();
+
+        troopScroll.setScrollbarsOnTop(false);
+        troopScroll.setFadeScrollBars(false);
+        displayGUI.add(troopScroll).maxHeight(150).growX().row();
 
         bottom().right();
         add(displayGUI).bottom().right();
@@ -95,13 +114,13 @@ public class TroopSelectedGui extends Table {
 
     public void clearSelection() {
         selectedTroops.clear();
-        displayGUI.reset();
-        displayGUI.add(createGroupButton).expandX().row();
+        troopTable.reset();
     }
 
     public void addTroop(Troop troop) {
         selectedTroops.add(troop);
-        Label label = new Label(troop.getClass().getSimpleName() + " - Id: " + troop.getGameId(), Styles.labelStyle);
-        displayGUI.add(label).row();
+        Label label = new Label(troop.getClass().getSimpleName() + " - Id: " + troop.getGameId(), GameApp.guiSkin);
+        troopTable.add(label).row();
+
     }
 }

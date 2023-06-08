@@ -53,7 +53,7 @@ public class PacketHandlers {
         ctx.channel.sendTCP(new GameInitPacket(playerData.controllerId).setResponsePacket(ctx.packet), null).perform();
 
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 20; i++) {
             Knight knight = new Knight();
             knight.setControllerId(playerData.controllerId);
             knight.bounds.setPosition(random.nextInt(-5, 10), random.nextInt(-5, 10));
