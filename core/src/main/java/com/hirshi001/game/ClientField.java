@@ -5,7 +5,6 @@ import com.badlogic.gdx.utils.Array;
 import com.hirshi001.game.render.ActorMap;
 import com.hirshi001.game.render.FieldRender;
 import com.hirshi001.game.shared.control.TroopGroup;
-import com.hirshi001.game.shared.entities.troop.Troop;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.entities.GamePiece;
@@ -16,7 +15,6 @@ import com.hirshi001.game.shared.packets.TroopGroupPacket;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.Point;
 import com.hirshi001.networking.network.client.Client;
-import com.hirshi001.networking.packet.Packet;
 import com.hirshi001.networking.packethandlercontext.PacketType;
 
 import java.util.HashMap;
@@ -28,7 +26,7 @@ public class ClientField extends Field {
     private final Client client;
     public final PlayerData playerData = new PlayerData();
     private final Map<Point, Long> chunkLastRequested = new HashMap<>();
-    private final Map<Chunk, Long> chunkLife = new HashMap<>();
+    private final Map<Chunk, Float> chunkLife = new HashMap<>();
 
     private final Vector2 position = new Vector2();
     public FieldRender fieldRender;
@@ -52,20 +50,66 @@ public class ClientField extends Field {
         this.fieldRender = fieldRender;
     }
 
-    public void addTroopGroup(TroopGroup troopGroup) {
-        playerData.troopGroups.put(troopGroup, troopGroup);
-        Packet packet = new TroopGroupPacket(TroopGroupPacket.OperationType.CREATE, troopGroup.name, troopGroup.getDirtyTroops());
-        client.getChannel().sendDeferred(packet, null, PacketType.TCP);
-        troopGroup.dirtyTroops.clear();
+    /**
+     * Sends a request to the server to create a new troop group. The request may not be accepted by the server, but if
+     * it is, the server will send a TroopGroupPacket with the newly created troop group.
+     *
+     * @param playerId the id of the player who is creating the troop group - must be this players id
+     * @param name     the name of the troop group
+     * @param troopIds the ids of the troops to add to the group
+     */
+    @Override
+    public void createTroopGroup(int playerId, String name, Array<Integer> troopIds) {
+        if (playerId != getControllerId()) return;
+        client.getChannel().send(new TroopGroupPacket(TroopGroupPacket.OperationType.CREATE, name, troopIds), null, PacketType.TCP).perform();
     }
 
-    public TroopGroup getTroopGroup(String name) {
-        return playerData.troopGroups.get(new TroopGroup(this, name, getControllerId()));
+    /**
+     * Sends a request to the server to delete a troop group. The request may not be accepted by the server, but if it
+     * is, the server will send a TroopGroupPacket with the deleted troop group.
+     *
+     * @param playerId the id of the player who is deleting the troop group - must be this players id
+     * @param name     the name of the troop group
+     */
+    @Override
+    public void deleteTroopGroup(int playerId, String name) {
+        if (playerId != getControllerId()) return;
+        client.getChannel().send(new TroopGroupPacket(TroopGroupPacket.OperationType.DELETE, name, null), null, PacketType.TCP).perform();
     }
 
-    public void addTroopsToGroup(TroopGroup troopGroup) {
-        Packet packet = new TroopGroupPacket(TroopGroupPacket.OperationType.ADD, troopGroup.name, troopGroup.getDirtyTroops());
-        client.getChannel().sendDeferred(packet, null, PacketType.TCP);
+    /**
+     * Sends a request to the server to add troops to a troop group. The request may not be accepted by the server, but
+     * if it is, the server will send a TroopGroupPacket with the updated troop group.
+     *
+     * @param playerId the id of the player who is adding the troops - must be this players id
+     * @param name     the name of the troop group
+     * @param troopIds the ids of the troops to add to the group
+     */
+    @Override
+    public void addTroopsToGroup(int playerId, String name, Array<Integer> troopIds) {
+        if (playerId != getControllerId()) return;
+        client.getChannel().send(new TroopGroupPacket(TroopGroupPacket.OperationType.ADD, name, troopIds), null, PacketType.TCP).perform();
+    }
+
+    /**
+     * Sends a request to the server to remove troops from a troop group. The request may not be accepted by the server,
+     * but if it is, the server will send a TroopGroupPacket with the updated troop group.
+     *
+     * @param playerId the id of the player who is removing the troops - must be this players id
+     * @param name     the name of the troop group
+     * @param troopIds the ids of the troops to remove from the group
+     */
+    @Override
+    public void removeTroopsFromGroup(int playerId, String name, Array<Integer> troopIds) {
+        client.getChannel().send(new TroopGroupPacket(TroopGroupPacket.OperationType.REMOVE, name, troopIds), null, PacketType.TCP).perform();
+    }
+
+    @Override
+    public TroopGroup getTroopGroup(int playerId, String name) {
+        if (playerId == getControllerId()) {
+            return playerData.troopGroups.get(name);
+        }
+        return null;
     }
 
     @Override
@@ -101,42 +145,46 @@ public class ClientField extends Field {
     @Override
     public void tick(float delta) {
         if (client.isOpen()) {
-            if (client.supportsUDP())
-                client.getChannel().sendDeferred(new MaintainConnectionPacket(), null, PacketType.UDP);
-            else
-                client.getChannel().sendDeferred(new MaintainConnectionPacket(), null, PacketType.TCP);
+            maintainConnection();
         }
 
+        handleChunkLoading(delta);
+        super.tick(delta);
+    }
+
+    protected void maintainConnection() {
+        if (client.supportsUDP())
+            client.getChannel().sendDeferred(new MaintainConnectionPacket(), null, PacketType.UDP);
+        else
+            client.getChannel().sendDeferred(new MaintainConnectionPacket(), null, PacketType.TCP);
+    }
+
+    protected void handleChunkLoading(float delta) {
+        // determine which chunks should be loaded
         Point chunkP = getChunkPosition(position.x, position.y);
         int s = chunkLoadRadius;
         for (int i = -s; i <= s; i++) {
             for (int j = -s; j <= s; j++) {
                 Chunk chunk = addChunk(chunkP.x + i, chunkP.y + j);
                 if (chunk != null) {
-                    chunkLife.put(chunk, 0L);
+                    chunkLife.put(chunk, 0F);
                 }
             }
         }
+
+        // remove chunks which have not needed to be loaded for a while (2 seconds)
+        final float chunkLifeTime = 2F;
         for (Chunk chunk : chunks.values()) {
-            chunkLife.putIfAbsent(chunk, 0L);
+            chunkLife.putIfAbsent(chunk, 0F);
         }
-        chunkLife.replaceAll((chunk, life) -> life + 1);
+        chunkLife.replaceAll((chunk, life) -> life + delta);
         chunkLife.entrySet().removeIf(entry -> {
-            if (entry.getValue() > 20) {
+            if (entry.getValue() > chunkLifeTime) {
                 removeChunk(entry.getKey().getChunkX(), entry.getKey().getChunkY());
                 return true;
             }
             return false;
         });
-        super.tick(delta);
-
-        for (TroopGroup troopGroup : playerData.troopGroups.values()) {
-            if (troopGroup.dirtyTroops.size > 0) {
-                Packet packet = new TroopGroupPacket(TroopGroupPacket.OperationType.ADD, troopGroup.name, troopGroup.getDirtyTroops());
-                client.getChannel().sendDeferred(packet, null, PacketType.TCP);
-                troopGroup.dirtyTroops.clear();
-            }
-        }
     }
 
     @Override

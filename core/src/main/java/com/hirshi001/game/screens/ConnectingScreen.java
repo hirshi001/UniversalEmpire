@@ -46,7 +46,7 @@ public class ConnectingScreen extends GameScreen {
                 .register(PropertyNamePacket::new, PacketHandlers::handlePropertyNamePacket, PropertyNamePacket.class, 9)
                 .register(MaintainConnectionPacket::new, null, MaintainConnectionPacket.class, 10)
                 .register(PingPacket::new, null, PingPacket.class, 11)
-                .register(TroopGroupPacket::new, null, TroopGroupPacket.class, 12);
+                .register(TroopGroupPacket::new, PacketHandlers::handleTroopGroupPacket, TroopGroupPacket.class, 12);
 
         NetworkData networkData = new DefaultNetworkData(Network.PACKET_ENCODER_DECODER, packetRegistryContainer);
         try {

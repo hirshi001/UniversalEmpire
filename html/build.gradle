@@ -67,6 +67,8 @@ dependencies {
     implementation "com.github.tommyettinger:textratypist:$textraTypistVersion:sources"
     implementation "com.github.tommyettinger:regexodus:$regexodusVersion:sources"
 
+    implementation "com.github.raeleus.stripe:stripe:$stripWidgetsVersion:sources"
+
 	implementation project(':core')
 
 //// You can use the lines below instead of the "com.badlogicgames.gdx:gdx-backend-gwt" dependencies.

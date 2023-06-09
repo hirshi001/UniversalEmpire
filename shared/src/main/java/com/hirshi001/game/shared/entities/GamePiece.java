@@ -86,6 +86,7 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
 
     public abstract boolean isStatic();
 
+
     public boolean worldInteractable() {
         return true;
     }

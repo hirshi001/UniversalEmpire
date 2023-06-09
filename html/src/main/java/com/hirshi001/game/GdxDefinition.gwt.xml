@@ -7,6 +7,7 @@
     <inherits name="com.badlogic.gdx.ai" />
     <inherits name="com.dongbat.jbump" />
     <inherits name="com.badlogic.gdx.graphics.g2d.freetype.freetype-gwt" />
+    <inherits name="com.ray3k.stripe" />
     <inherits name="com.ray3k.tenpatch.tenpatch"/>
     <inherits name="regexodus.regexodus" />
     <inherits name="com.github.tommyettinger.textratypist" />

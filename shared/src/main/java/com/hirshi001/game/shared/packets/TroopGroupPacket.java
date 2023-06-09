@@ -18,12 +18,14 @@ public class TroopGroupPacket extends Packet {
 
     public TroopGroupPacket(){}
 
-    public TroopGroupPacket(OperationType type, String name, Array<Troop> troops){
+    public TroopGroupPacket(OperationType type, String name, Array<Integer> troops){
         this.type = type;
         this.name = name;
-        this.troopIds = new int[troops.size];
-        for(int i = 0; i < troops.size; i++){
-            troopIds[i] = troops.get(i).getGameId();
+        if(troops!=null) {
+            this.troopIds = new int[troops.size];
+            for (int i = 0; i < troops.size; i++) {
+                troopIds[i] = troops.get(i);
+            }
         }
     }
 
@@ -33,7 +35,7 @@ public class TroopGroupPacket extends Packet {
         out.writeByte(type.ordinal());
         ByteBufUtil.writeStringToBuf(name, out);
         if(type==OperationType.DELETE) return;
-        out.writeByte(troopIds.length); // TODO: find out why sending troopIds.length as a byte breaks everything
+        out.writeByte(troopIds.length);
         for(int i : troopIds){
             out.writeInt(i);
         }

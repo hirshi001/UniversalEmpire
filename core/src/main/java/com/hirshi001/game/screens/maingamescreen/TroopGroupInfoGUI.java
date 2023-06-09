@@ -41,7 +41,8 @@ public class TroopGroupInfoGUI extends Table {
         label.setAlignment(Align.center);
 
         //noinspection GDXJavaUnsafeIterator
-        for (Troop troop : troopGroup.troops) {
+        for (Integer troopId : troopGroup.troops) {
+            Troop troop = (Troop) troopGroup.field.getGamePiece(troopId);
             String troopInfo = troop.getClass().getSimpleName() + " " + troop.getTroopTier() + " (id=" + troop.getGameId() + ")";
             displayTroopWindow.add(new Label(troopInfo, GameApp.guiSkin)).center().row();
         }

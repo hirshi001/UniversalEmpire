@@ -41,14 +41,13 @@ public class TroopSelectedGui extends Table {
                         InputGui inputGui = new InputGui("Group Name", new InputGui.InputListener() {
                             @Override
                             public void onInput(String input, InputGui gui) {
-                                TroopGroup group = new TroopGroup(GameApp.field, input, GameApp.field.getControllerId());
+                                Array<Integer> troopIds = new Array<>();
                                 for (Troop troop : selectedTroops) {
-                                    group.addTroop(troop);
+                                    troopIds.add(troop.getGameId());
                                 }
-                                Gdx.app.postRunnable(() -> {
-                                    GameApp.field.addTroopGroup(group);
-                                    GameApp.removeGameGui(gui);
-                                });
+                                GameApp.field.createTroopGroup(GameApp.field.getControllerId(), input, troopIds);
+
+                                Gdx.app.postRunnable(() -> GameApp.removeGameGui(gui));
                             }
                         });
                         inputGui.setFillParent(true);
@@ -85,10 +84,12 @@ public class TroopSelectedGui extends Table {
                                 @Override
                                 public void clicked(InputEvent event, float x, float y) {
                                     super.clicked(event, x, y);
-                                    for(Troop troop:selectedTroops){
-                                        group.addTroop(troop);
+                                    Array<Integer> troopIds = new Array<>();
+                                    for (Troop troop : selectedTroops) {
+                                        troopIds.add(troop.getGameId());
                                     }
-                                    GameApp.removeGameGui(table);
+                                    GameApp.field.addTroopsToGroup(GameApp.field.getControllerId(), group.name, troopIds);
+                                    Gdx.app.postRunnable( ()->GameApp.removeGameGui(table));
                                 }
                             });
                             window.add(button).center().uniformX().row();

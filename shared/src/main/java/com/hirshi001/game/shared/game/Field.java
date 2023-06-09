@@ -80,6 +80,16 @@ public abstract class Field extends World {
         }
     }
 
+    public abstract void createTroopGroup(int playerId, String name, Array<Integer> troopIds);
+
+    public abstract void deleteTroopGroup(int playerId, String name);
+
+    public abstract TroopGroup getTroopGroup(int playerId, String name);
+
+    public abstract void addTroopsToGroup(int playerId, String name, Array<Integer> troopIds);
+
+    public abstract void removeTroopsFromGroup(int playerId, String name, Array<Integer> troopIds);
+
     public LinkedList<IntPoint> findPathList(int startX, int startY, int endX, int endY) {
         SearchNode node = findPath(startX, startY, endX, endY);
         if (node == null) {

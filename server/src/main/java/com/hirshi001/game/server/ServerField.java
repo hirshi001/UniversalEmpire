@@ -1,7 +1,9 @@
 package com.hirshi001.game.server;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Array;
 import com.hirshi001.game.shared.control.TroopGroup;
+import com.hirshi001.game.shared.entities.troop.Troop;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.entities.GamePiece;
@@ -16,9 +18,9 @@ import java.util.*;
 
 public class ServerField extends Field {
 
-    private ChunkLoader loader;
+    private final ChunkLoader loader;
     public Server server;
-    public Set<PlayerData> players = Collections.synchronizedSet(new HashSet<>());
+    public Map<Integer, PlayerData> players = Collections.synchronizedMap(new HashMap<>());
     private int nextControllerId = 0;
 
 
@@ -32,6 +34,78 @@ public class ServerField extends Field {
         return nextControllerId++;
     }
 
+    @Override
+    public void createTroopGroup(int playerId, String name, Array<Integer> troopIds) {
+        PlayerData playerData = players.get(playerId);
+        if(playerData != null) {
+            TroopGroup troopGroup = new TroopGroup(this, name, playerId);
+            troopGroup.addTroops(troopIds);
+            playerData.troopGroups.put(name, troopGroup);
+            playerData.channel.sendTCP(new TroopGroupPacket(TroopGroupPacket.OperationType.CREATE, name, troopIds), null).perform();
+        }
+    }
+
+    @Override
+    public void deleteTroopGroup(int playerId, String name) {
+        PlayerData playerData = players.get(playerId);
+        if(playerData != null) {
+            TroopGroup troopGroup = playerData.troopGroups.remove(name);
+            if(troopGroup!=null){
+                for(int i=0;i<troopGroup.troops.size;i++){
+                    GamePiece piece = getGamePiece(troopGroup.troops.get(i));
+                    if(piece instanceof Troop troop){
+                        troop.setGroup(null);
+                    }
+                }
+            }
+            playerData.channel.sendTCP(new TroopGroupPacket(TroopGroupPacket.OperationType.DELETE, name, null), null).perform();
+        }
+    }
+
+    @Override
+    public TroopGroup getTroopGroup(int playerId, String name) {
+        PlayerData playerData = players.get(playerId);
+        if (playerData != null) {
+            return playerData.troopGroups.get(name);
+        }
+        return null;
+    }
+
+    @Override
+    public void addTroopsToGroup(int playerId, String name, Array<Integer> troopIds) {
+        PlayerData playerData = players.get(playerId);
+        if (playerData != null) {
+
+            for(int i=0; i<troopIds.size; i++){
+                GamePiece piece = getGamePiece(troopIds.get(i));
+                if(piece instanceof Troop troop){
+                    TroopGroup oldGroup = troop.getGroup();
+                    if(oldGroup!=null) {
+                        oldGroup.removeTroop(troop);
+                    }
+                }
+            }
+
+            TroopGroup troopGroup = playerData.troopGroups.get(name);
+            if (troopGroup != null) {
+                troopGroup.addTroops(troopIds);
+            }
+
+            playerData.channel.sendTCP(new TroopGroupPacket(TroopGroupPacket.OperationType.ADD, name, troopIds), null).perform();
+        }
+    }
+
+    @Override
+    public void removeTroopsFromGroup(int playerId, String name, Array<Integer> troopIds) {
+        PlayerData playerData = players.get(playerId);
+        if (playerData != null) {
+            TroopGroup troopGroup = playerData.troopGroups.get(name);
+            if (troopGroup != null) {
+                troopGroup.removeTroops(troopIds);
+            }
+            playerData.channel.sendTCP(new TroopGroupPacket(TroopGroupPacket.OperationType.REMOVE, name, troopIds), null).perform();
+        }
+    }
 
     @Override
     public Chunk loadChunk(int x, int y) {
@@ -89,7 +163,7 @@ public class ServerField extends Field {
         dt += delta;
         if (dt >= 10) {
             dt = 0;
-            for (PlayerData playerData : players) {
+            for (PlayerData playerData : players.values()) {
                 for (TroopGroup troopGroup : playerData.troopGroups.values()) {
                     troopGroup.moveTroops(MathUtils.random(-20, 10), MathUtils.random(-20, 20), 2);
                 }
@@ -97,7 +171,7 @@ public class ServerField extends Field {
         }
 
 
-        Iterator<PlayerData> iterator = players.iterator();
+        Iterator<PlayerData> iterator = players.values().iterator();
         while (iterator.hasNext()) {
             PlayerData playerData = iterator.next();
             if (playerData.channel.isClosed()) {

@@ -1,5 +1,6 @@
 package com.hirshi001.game.server;
 
+import com.badlogic.gdx.utils.Array;
 import com.hirshi001.game.shared.control.TroopGroup;
 import com.hirshi001.game.shared.entities.troop.Knight;
 import com.hirshi001.game.shared.entities.troop.Troop;
@@ -12,6 +13,7 @@ import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.props.Properties;
 import com.hirshi001.networking.packethandlercontext.PacketHandlerContext;
+import com.hirshi001.networking.packethandlercontext.PacketType;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -49,7 +51,7 @@ public class PacketHandlers {
 
         ctx.channel.attach(playerData);
 
-        field.players.add(playerData);
+        field.players.put(playerData.controllerId, playerData);
         ctx.channel.sendTCP(new GameInitPacket(playerData.controllerId).setResponsePacket(ctx.packet), null).perform();
 
         ThreadLocalRandom random = ThreadLocalRandom.current();
@@ -78,34 +80,31 @@ public class PacketHandlers {
         TroopGroupPacket packet = ctx.packet;
         PlayerData playerData = (PlayerData) ctx.channel.getAttachment();
 
-        TroopGroup findTroopGroup = new TroopGroup(field, packet.name, playerData.controllerId);
+        Array<Integer> temp = null;
+        if (packet.troopIds != null) {
+            temp = new Array<>(packet.troopIds.length);
+            for (int i = 0; i < packet.troopIds.length; i++) {
+                temp.add(packet.troopIds[i]);
+            }
+        }
 
-        GameSettings.runnablePoster.postRunnable( ()-> {
+        final Array<Integer> troopIds = temp;
+
+        GameSettings.runnablePoster.postRunnable(() -> {
             try {
                 if (packet.type == TroopGroupPacket.OperationType.CREATE) {
-                    playerData.troopGroups.put(findTroopGroup, findTroopGroup);
+                    field.createTroopGroup(playerData.controllerId, packet.name, troopIds);
+                } else if (packet.type == TroopGroupPacket.OperationType.ADD) {
+                    field.addTroopsToGroup(playerData.controllerId, packet.name, troopIds);
+                } else if (packet.type == TroopGroupPacket.OperationType.REMOVE) {
+                    field.removeTroopsFromGroup(playerData.controllerId, packet.name, troopIds);
+                } else if (packet.type == TroopGroupPacket.OperationType.DELETE) {
+                    field.deleteTroopGroup(playerData.controllerId, packet.name);
+                    playerData.troopGroups.remove(packet.name);
                 }
-
-                if (packet.type == TroopGroupPacket.OperationType.ADD || packet.type == TroopGroupPacket.OperationType.CREATE) {
-                    TroopGroup troopGroup = playerData.troopGroups.get(findTroopGroup);
-                    for (int i = 0; i < packet.troopIds.length; i++) {
-                        GamePiece piece = field.getGamePiece(packet.troopIds[i]);
-                        if (piece instanceof Troop) troopGroup.addTroop((Troop) piece);
-                    }
-                }
-
-                if (packet.type == TroopGroupPacket.OperationType.REMOVE) {
-                    TroopGroup troopGroup = playerData.troopGroups.get(findTroopGroup);
-                    for (int i = 0; i < packet.troopIds.length; i++) {
-                        GamePiece piece = field.getGamePiece(packet.troopIds[i]);
-                        if (piece instanceof Troop) troopGroup.removeTroop((Troop) piece);
-                    }
-                }
-
-                if (packet.type == TroopGroupPacket.OperationType.DELETE) {
-                    playerData.troopGroups.remove(findTroopGroup);
-                }
-            }catch (Exception e){e.printStackTrace();}
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
 
     }

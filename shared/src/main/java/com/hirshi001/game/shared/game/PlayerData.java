@@ -14,9 +14,17 @@ public class PlayerData {
     public Channel channel;
     public int controllerId;
 
-    public Map<TroopGroup, TroopGroup> troopGroups = new ConcurrentHashMap<>();
+    public Map<String, TroopGroup> troopGroups = new ConcurrentHashMap<>();
     public Set<Point> trackedChunks = new HashSet<>();
     public Set<Point> softTrackedChunks = new HashSet<>();
 
+    @Override
+    public int hashCode() {
+        return controllerId;
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof PlayerData && ((PlayerData) obj).controllerId == controllerId;
+    }
 }

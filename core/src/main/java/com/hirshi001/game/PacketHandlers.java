@@ -1,9 +1,12 @@
 package com.hirshi001.game;
 
 import com.badlogic.gdx.Gdx;
+import com.hirshi001.game.shared.control.TroopGroup;
 import com.hirshi001.game.shared.entities.Fireball;
+import com.hirshi001.game.shared.entities.troop.Troop;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.entities.GamePiece;
+import com.hirshi001.game.shared.game.PlayerData;
 import com.hirshi001.game.shared.packets.*;
 import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.util.props.Properties;
@@ -88,6 +91,40 @@ public class PacketHandlers {
         GamePiece piece = field.getGamePiece(packet.gamePieceId);
         if (piece == null) return;
         GameSettings.runnablePoster.postRunnable(() -> piece.getProperties().put(packet.propertyName, packet.propertyId, packet.value));
+    }
+
+
+    public static void handleTroopGroupPacket(PacketHandlerContext<TroopGroupPacket> ctx) {
+        ClientField field = GameApp.field;
+        TroopGroupPacket packet = ctx.packet;
+        PlayerData playerData = field.playerData;
+
+        GameSettings.runnablePoster.postRunnable( ()-> {
+            try {
+                if (packet.type == TroopGroupPacket.OperationType.CREATE) {
+                    playerData.troopGroups.put(packet.name, new TroopGroup(field, packet.name, playerData.controllerId));
+                }
+
+                if (packet.type == TroopGroupPacket.OperationType.ADD || packet.type == TroopGroupPacket.OperationType.CREATE) {
+                    TroopGroup troopGroup = playerData.troopGroups.get(packet.name);
+                    for (int i = 0; i < packet.troopIds.length; i++) {
+                        troopGroup.addTroop(packet.troopIds[i]);
+                    }
+                }
+
+                if (packet.type == TroopGroupPacket.OperationType.REMOVE) {
+                    TroopGroup troopGroup = playerData.troopGroups.get(packet.name);
+                    for (int i = 0; i < packet.troopIds.length; i++) {
+                        troopGroup.removeTroop(packet.troopIds[i]);
+                    }
+                }
+
+                if (packet.type == TroopGroupPacket.OperationType.DELETE) {
+                    playerData.troopGroups.remove(packet.name);
+                }
+            }catch (Exception e){e.printStackTrace();}
+        });
+
     }
 
 

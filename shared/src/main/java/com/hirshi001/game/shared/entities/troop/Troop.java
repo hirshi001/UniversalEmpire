@@ -11,6 +11,8 @@ import com.hirshi001.game.shared.entities.Entity;
 import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.entities.LivingEntity;
 import com.hirshi001.game.shared.game.Field;
+import com.hirshi001.game.shared.game.PlayerData;
+import com.hirshi001.game.shared.settings.GameSettings;
 
 public abstract class Troop extends LivingEntity {
 
@@ -64,9 +66,20 @@ public abstract class Troop extends LivingEntity {
     }
 
     protected void checkHealth() {
-        if (getHealth() <= 0 && field.isServer()) {
+        if(getHealth()<=0) setHealth(0);
+        if (getHealth() == 0 && field.isServer()) {
             alive = false;
-            field.remove(this);
+            onDeath();
+            field.removeGamePiece(this);
+        }
+    }
+
+    // TODO: Make sure TroopGroup is foolproof
+    protected void onDeath() {
+        TroopGroup group = getGroup();
+        if(group!=null) {
+            group.removeTroop(this);
+            setGroup(null);
         }
     }
 
@@ -77,19 +90,24 @@ public abstract class Troop extends LivingEntity {
         }
     }
 
+
+
     public void setGroup(TroopGroup group) {
-        getProperties().putLocal("group", group); // only put for visual purposes
+        // For visual purposes only so that not all clients will know the troop group of this troop
+        // Should be set by the server only when a packet is received by the client or server
+        if(group==null) getProperties().putLocal("group", null);
+        else getProperties().putLocal("group", group.name);
+
     }
 
     public TroopGroup getGroup() {
-        return getProperties().get("group");
+        String name = getProperties().get("group");
+        if(name==null) return null;
+        return field.getTroopGroup(getControllerId(), name);
     }
 
-    @Override
-    public void removed() {
-        super.removed();
-        TroopGroup group = getGroup();
-        if(group!=null) group.removeTroop(this);
+    public String getGroupName() {
+        return getProperties().get("group");
     }
 
     protected abstract void performAttack(LivingEntity target);
