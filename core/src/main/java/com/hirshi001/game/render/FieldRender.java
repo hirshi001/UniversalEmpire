@@ -8,30 +8,30 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Interpolation;
-import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.hirshi001.game.ClientField;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.game.render.tilerenderers.TileRenderers;
-import com.hirshi001.game.screens.maingamescreen.GameGUI;
 import com.hirshi001.game.screens.maingamescreen.SettingsGUI;
 import com.hirshi001.game.screens.maingamescreen.TroopSelectedGui;
+import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.entities.troop.Troop;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
-import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.util.Settings;
 import com.hirshi001.game.widgets.PropertiesTextArea;
-import com.hirshi001.game.widgets.Styles;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 public class FieldRender extends InputAdapter {
 
@@ -43,8 +43,8 @@ public class FieldRender extends InputAdapter {
 
     Stage stage;
     Table table;
-    public final List<GamePiece> selectedItems = new ArrayList<>();
-    public final List<GamePiece> writtenItems = new ArrayList<>();
+    public final Array<GamePiece> selectedItems = new Array<>();
+    public final Array<GamePiece> writtenItems = new Array<>();
     PropertiesTextArea textArea = new PropertiesTextArea("");
 
     TroopSelectedGui selectionGUI;
@@ -96,13 +96,28 @@ public class FieldRender extends InputAdapter {
             if (piece.userData instanceof GamePieceActor) {
                 ((GamePieceActor) piece.userData).debugRender(renderer);
             } else {
-                renderer.rect(piece.bounds.x, piece.bounds.y, piece.bounds.width, piece.bounds.height);
+                renderer.circle(piece.getX(), piece.getY(), 0.25F, 20);
             }
         }
         renderer.end();
     }
 
     public void render(float delta) {
+        Vector2 cameraMove = new Vector2();
+        if (Gdx.input.isKeyPressed(Settings.moveUp.value)) {
+            cameraMove.add(0, 1);
+        }
+        if (Gdx.input.isKeyPressed(Settings.moveDown.value)) {
+            cameraMove.add(0, -1);
+        }
+        if (Gdx.input.isKeyPressed(Settings.moveLeft.value)) {
+            cameraMove.add(-1, 0);
+        }
+        if (Gdx.input.isKeyPressed(Settings.moveRight.value)) {
+            cameraMove.add(1, 0);
+        }
+        cameraMove.nor().scl(5 * camera.zoom * delta);
+        ((ClientField) field).getPosition().add(cameraMove);
 
         // interpolate camera position
         ClientField clientField = (ClientField) field;
@@ -116,10 +131,10 @@ public class FieldRender extends InputAdapter {
         drawTiles(delta);
         drawItems(delta);
         batch.end();
+
         debugRender();
 
         drawSelection(delta);
-
 
         drawProperties(delta);
         stage.act(delta);
@@ -193,7 +208,7 @@ public class FieldRender extends InputAdapter {
         synchronized (selectedItems) {
             boolean redo = false;
             for (GamePiece item : selectedItems) {
-                if (!writtenItems.contains(item) || item.getProperties().getModifiedProperties().size() > 0 || item.getProperties().getLocalModifiedProperties().size() > 0) {
+                if (!writtenItems.contains(item, false) || item.getProperties().getModifiedProperties().size() > 0 || item.getProperties().getLocalModifiedProperties().size() > 0) {
                     redo = true;
                     item.getProperties().getModifiedProperties().clear();
                     item.getProperties().getLocalModifiedProperties().clear();
@@ -201,7 +216,7 @@ public class FieldRender extends InputAdapter {
             }
             if (!redo) {
                 for (GamePiece item : writtenItems) {
-                    if (!selectedItems.contains(item)) {
+                    if (!selectedItems.contains(item, false)) {
                         redo = true;
                         break;
                     }
@@ -234,10 +249,8 @@ public class FieldRender extends InputAdapter {
 
     @Override
     public boolean scrolled(float amountX, float amountY) {
-        camera.zoom += amountY / 100F;
-        camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 100f);
-        Settings.zoom.value = camera.zoom;
-        camera.update();
+        Settings.zoom.change(amountY * 0.01f + Settings.zoom.value);
+        Settings.zoom.apply();
         return true;
     }
 
@@ -283,13 +296,13 @@ public class FieldRender extends InputAdapter {
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         if (button == Input.Buttons.RIGHT && rightClick) {
-            ArrayList<GamePiece> items = new ArrayList<>();
+            Array<GamePiece> items = new Array<>();
             float x = Math.min(startSelectionDrag.x, endSelectionDrag.x);
             float y = Math.min(startSelectionDrag.y, endSelectionDrag.y);
             float w = Math.abs(startSelectionDrag.x - endSelectionDrag.x);
             float h = Math.abs(startSelectionDrag.y - endSelectionDrag.y);
 
-            field.queryRect(x, y, w, h, null, items);
+            field.queryRect(x, y, w, h, items);
 
             synchronized (selectedItems) {
                 for (GamePiece item : selectedItems) {
@@ -315,7 +328,7 @@ public class FieldRender extends InputAdapter {
                     GameApp.addGameGui(selectionGUI);
                     // selectionGUI.invalidate();
                     // make the gui go to the right of the screen
-                }else {
+                } else {
                     GameApp.removeGameGui(selectionGUI);
                 }
             }
@@ -331,17 +344,20 @@ public class FieldRender extends InputAdapter {
 
     @Override
     public boolean keyDown(int keycode) {
-        if(keycode==Input.Keys.ESCAPE){
+        if (keycode == Input.Keys.ESCAPE) {
             Group root = GameApp.guiStage().getRoot();
-            if(settingsGUI==null){
+            if (settingsGUI == null) {
                 settingsGUI = new SettingsGUI();
             }
-            if(settingsGUI.getParent()==root) {
+            if (settingsGUI.getParent() == root) {
                 root.removeActor(settingsGUI);
-            }else{
+            } else {
                 settingsGUI.pack();
                 settingsGUI.setFillParent(true);
+                // GameApp.addGameGui(settingsGUI);
                 root.addActor(settingsGUI);
+                GameApp.guiStage().setScrollFocus(settingsGUI);
+                GameApp.guiStage().setKeyboardFocus(settingsGUI);
             }
         }
         return super.keyDown(keycode);

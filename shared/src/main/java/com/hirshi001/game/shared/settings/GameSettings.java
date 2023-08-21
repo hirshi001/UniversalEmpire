@@ -4,6 +4,7 @@ import com.badlogic.gdx.ai.steer.utils.paths.LinePath;
 import com.badlogic.gdx.math.Vector2;
 import com.hirshi001.buffer.bufferfactory.BufferFactory;
 import com.hirshi001.game.shared.control.AttackTroopMovement;
+import com.hirshi001.game.shared.control.FollowLeaderMovement;
 import com.hirshi001.game.shared.control.MoveTroopMovement;
 import com.hirshi001.game.shared.util.RunnablePoster;
 import com.hirshi001.game.shared.util.props.PropertiesManager;
@@ -34,6 +35,7 @@ public class GameSettings {
 
         MANAGER.register(MoveTroopMovement.class, new MoveTroopMovementSerializer(), 32);
         MANAGER.register(AttackTroopMovement.class, new AttackTroopMovementSerializer(), 33);
+        MANAGER.register(FollowLeaderMovement.class, new FollowLeaderMovementSerializer(), 34);
     }
 
 

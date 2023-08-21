@@ -22,6 +22,7 @@ import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.settings.Network;
 import com.hirshi001.networking.network.NetworkFactory;
 import com.hirshi001.networking.network.client.Client;
+import com.hirshi001.networking.packetdecoderencoder.SimplePacketEncoderDecoder;
 
 import java.text.NumberFormat;
 
@@ -64,7 +65,7 @@ public class GameApp extends Game {
 
 	public static Stage guiStage(){
 		Screen screen = Game().getScreen();
-		if(screen instanceof GameScreen){
+		if(screen instanceof MainGameScreen){
 			return ((MainGameScreen) screen).getGuiStage();
 		}
 		return null;
@@ -76,8 +77,8 @@ public class GameApp extends Game {
 		this.disposeWhenClose = disposeWhenClose;
 		this.ip = ip;
 		this.port = port;
-		this.bufferFactory = bufferFactory;
-		this.networkFactory = networkFactory;
+		GameApp.bufferFactory = bufferFactory;
+		GameApp.networkFactory = networkFactory;
 		GameSettings.BUFFER_FACTORY = bufferFactory;
 		GameSettings.registerSerializers();
 	}
@@ -121,6 +122,11 @@ public class GameApp extends Game {
 			Gdx.app.log("Error", "Error in screen: " + getScreen());
 			Gdx.app.log("Error", "Error in screen: " + getScreen(), t);
 			setScreen(new ErrorScreen(this, t));
+		}
+
+		if(client!=null && client.isOpen()) {
+			if(client.tcpOpen()) client.checkTCPPackets();
+			if(client.udpOpen()) client.checkUDPPackets();
 		}
 
 		/*

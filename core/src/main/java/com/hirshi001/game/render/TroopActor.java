@@ -21,14 +21,15 @@ public abstract class TroopActor<T extends Troop> extends GamePieceActor<T>{
 
     @Override
     public void render(SpriteBatch batch, float delta) {
-        if(fieldRender.selectedItems.contains(gamePiece) && gamePiece.getControllerId() == ((ClientField)gamePiece.field).getControllerId()){
+        if(fieldRender.selectedItems.contains(gamePiece, false) && gamePiece.getControllerId() == ((ClientField)gamePiece.field).getControllerId()){
             // TODO: enable shader for highlighting
         }
     }
 
     @Override
     public void debugRender(ShapeRenderer renderer) {
-        if(fieldRender.selectedItems.contains(gamePiece) && gamePiece.getControllerId() == ((ClientField)gamePiece.field).getControllerId()){
+
+        if(fieldRender.selectedItems.contains(gamePiece, false) && gamePiece.getControllerId() == ((ClientField)gamePiece.field).getControllerId()){
             renderer.setColor(Color.GREEN);
         }
         else if(gamePiece.getControllerId() == GameApp.field.getControllerId()) {
@@ -36,7 +37,7 @@ public abstract class TroopActor<T extends Troop> extends GamePieceActor<T>{
         }else{
             renderer.setColor(Color.BLUE);
         }
-        renderer.rect(gamePiece.bounds.x, gamePiece.bounds.y, gamePiece.bounds.width, gamePiece.bounds.height);
+        renderer.circle(gamePiece.getX(), gamePiece.getY(), 0.1F, 10);
 
         Movement movement = gamePiece.getMovement();
         if(movement instanceof MoveTroopMovement){
@@ -47,6 +48,7 @@ public abstract class TroopActor<T extends Troop> extends GamePieceActor<T>{
             Iterator<IntPoint> iterator = path.iterator();
             if(iterator.hasNext()) {
                 IntPoint prev = iterator.next();
+                renderer.line(gamePiece.getX(), gamePiece.getY(), prev.x + 0.5f, prev.y + 0.5f);
                 while (iterator.hasNext()) {
                     IntPoint next = iterator.next();
                     renderer.line(prev.x + 0.5f, prev.y + 0.5f, next.x + 0.5f, next.y + 0.5f);
@@ -55,5 +57,7 @@ public abstract class TroopActor<T extends Troop> extends GamePieceActor<T>{
             }
 
         }
+
+
     }
 }

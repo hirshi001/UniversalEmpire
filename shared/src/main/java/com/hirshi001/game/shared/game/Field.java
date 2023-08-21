@@ -1,52 +1,44 @@
 package com.hirshi001.game.shared.game;
 
-import com.badlogic.gdx.ai.GdxAI;
-import com.badlogic.gdx.ai.pfa.Connection;
-import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
-import com.badlogic.gdx.ai.pfa.GraphPath;
-import com.badlogic.gdx.ai.pfa.Heuristic;
-import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
-import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
-import com.badlogic.gdx.ai.steer.utils.paths.LinePath;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
-import com.badlogic.gdx.utils.TimeUtils;
 import com.dongbat.jbump.IntPoint;
-import com.dongbat.jbump.World;
 import com.hirshi001.game.shared.control.TroopGroup;
 import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.entities.SolidTile;
+import com.hirshi001.game.shared.entities.tilepieces.TileGamePiece;
 import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.shared.util.HashedPoint;
+import com.hirshi001.game.shared.util.PathFinder;
 import com.hirshi001.game.shared.util.Point;
-import com.hirshi001.game.shared.util.Resources;
+import com.hirshi001.game.shared.util.ThreadSafe;
+import com.hirshi001.restapi.ScheduledExec;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class Field extends World {
+public abstract class Field {
 
     private final int chunkSize;
 
     protected final Map<HashedPoint, Chunk> chunks = new ConcurrentHashMap<>();
-    private int nextId;
+    private int nextId = 1; // start id at 1 so that 0 can be used to represent no id making it easier to initialize arrays which use ids
     public long time;
     private final Map<Integer, GamePiece> gamePieces;
     private final Array<GamePiece> gamePiecesToAdd = new Array<>(), addedGamePieces = new Array<>(),
             gamePiecesToRemove = new Array<>(), removedGamePieces = new Array<>();
     private final Pool<HashedPoint> points;
-    private final Pool<SearchNode> searchNodes;
+    public final GameMechanics gameMechanics;
+    private final ScheduledExec exec;
 
-    private final int[] dx = new int[]{0, 1, 0, -1};
-    private final int[] dy = new int[]{1, 0, -1, 0};
-
-
-    public Field(float cellSize, int chunkSize) {
-        super(cellSize);
+    public Field(int chunkSize, GameMechanics gameMechanics, ScheduledExec exec) {
         this.chunkSize = chunkSize;
-        gamePieces = new HashMap<>();
+        this.gameMechanics = gameMechanics;
+        this.exec = exec;
+        gameMechanics.setField(this);
+        gamePieces = new ConcurrentHashMap<>();
         points = new Pool<HashedPoint>() {
             @Override
             protected HashedPoint newObject() {
@@ -54,13 +46,10 @@ public abstract class Field extends World {
             }
         };
 
-        searchNodes = new Pool<SearchNode>(chunkSize * chunkSize) {
-            @Override
-            protected SearchNode newObject() {
-                return new SearchNode();
-            }
-        };
+    }
 
+    public ScheduledExec getExec() {
+        return exec;
     }
 
     public Collection<Chunk> getChunks() {
@@ -80,119 +69,251 @@ public abstract class Field extends World {
         }
     }
 
-    public abstract void createTroopGroup(int playerId, String name, Array<Integer> troopIds);
+    public GameMechanics getGameMechanics() {
+        return gameMechanics;
+    }
 
-    public abstract void deleteTroopGroup(int playerId, String name);
+    public Array<GamePiece> queryRect(float x, float y, float w, float h, Array<GamePiece> gamePieces) {
+        // get all chunks in the rectangle
+        if (gamePieces == null) gamePieces = new Array<>();
+        Point startChunk = getChunkPosition(x, y);
+        Point endChunk = getChunkPosition(x + w, y + h);
+        for (int i = startChunk.getX(); i <= endChunk.getX(); i++) {
+            for (int j = startChunk.getY(); j <= endChunk.getY(); j++) {
+                Chunk chunk = getChunk(i, j);
+                if (chunk != null) {
+                    chunk.getGamePiecesFromWorldCoords(x, y, w, h, gamePieces);
+                }
+            }
+        }
+        return gamePieces;
+    }
 
-    public abstract TroopGroup getTroopGroup(int playerId, String name);
+    public void moveGamePieceShort(GamePiece gamePiece, float x2, float y2) {
+        float x1 = gamePiece.getX();
+        float y1 = gamePiece.getY();
+        int tileX = (int) Math.floor(gamePiece.getX());
+        int tileY = (int) Math.floor(gamePiece.getY());
+        int targetTileX = (int) Math.floor(x2);
+        int targetTileY = (int) Math.floor(y2);
 
-    public abstract void addTroopsToGroup(int playerId, String name, Array<Integer> troopIds);
+        if (isServer()) {
+            gamePiece.getProperties().put("dx", targetTileX - tileX);
+            gamePiece.getProperties().put("dy", targetTileY - tileY);
+        }
 
-    public abstract void removeTroopsFromGroup(int playerId, String name, Array<Integer> troopIds);
+        if (tileX == targetTileX && tileY == targetTileY) {
+            gamePiece.setPosition(x2, y2);
+            return;
+        }
+
+        float d = 1e-5F;
+
+        if (tileX == targetTileX) {
+            // check top and bottom
+            if (isWalkable(tileX, targetTileY)) {
+                gamePiece.setPosition(x2, y2);
+            } else if (tileY < targetTileY) { // collides with top tile
+                gamePiece.setPosition(x2, targetTileY - d);
+            } else { // collides with bottom tile
+                gamePiece.setPosition(x2, tileY + d);
+            }
+            return;
+        } else if (tileY == targetTileY) {
+            // check left and right
+            if (isWalkable(targetTileX, tileY)) {
+                gamePiece.setPosition(x2, y2);
+            } else if (tileX < targetTileX) { // collision with right tile
+                gamePiece.setPosition(targetTileX - d, y2);
+            } else { // collision with left tile
+                gamePiece.setPosition(tileX + d, y2);
+            }
+        }
+        // check corners
+        // check top left
+        else if (tileX > targetTileX && tileY < targetTileY) {
+            boolean leftWalkable = isWalkable(tileX - 1, tileY);
+            boolean topWalkable = isWalkable(tileX, tileY + 1);
+            boolean topLeftWalkable = isWalkable(tileX - 1, tileY + 1);
+            if (leftWalkable && topWalkable && topLeftWalkable) {
+                gamePiece.setPosition(x2, y2);
+                return;
+            }
+            // check top
+            if (Intersector.intersectSegments(x1, y1, x2, y2, tileX, targetTileY, tileX + 1, targetTileY, null)) {
+                if (!topWalkable) {
+                    gamePiece.setY(targetTileY - d);
+                    if (leftWalkable) {
+                        gamePiece.setX(x2);
+                    } else {
+                        gamePiece.setX(tileX + d);
+                    }
+                    return;
+                }
+                if (topLeftWalkable) {
+                    gamePiece.setPosition(x2, y2);
+                    return;
+                }
+                gamePiece.setPosition(tileX + d, y2);
+                return;
+            } else { // check left
+                if (!leftWalkable) {
+                    gamePiece.setX(tileX + d);
+                    if (topWalkable) {
+                        gamePiece.setY(y2);
+                    } else {
+                        gamePiece.setY(targetTileY - d);
+                    }
+                    return;
+                }
+                if (topLeftWalkable) {
+                    gamePiece.setPosition(x2, y2);
+                    return;
+                }
+                gamePiece.setPosition(x2, targetTileY - d);
+                return;
+            }
+        }
+        // check top right
+        else if (tileX < targetTileX && tileY < targetTileY) {
+            boolean rightWalkable = isWalkable(tileX + 1, tileY);
+            boolean topWalkable = isWalkable(tileX, tileY + 1);
+            boolean topRightWalkable = isWalkable(tileX + 1, tileY + 1);
+            if (rightWalkable && topWalkable && topRightWalkable) {
+                gamePiece.setPosition(x2, y2);
+                return;
+            }
+            // check top
+            if (Intersector.intersectSegments(x1, y1, x2, y2, tileX, tileY + 1, tileX + 1, tileY + 1, null)) {
+                if (!topWalkable) {
+                    gamePiece.setY(targetTileY - d);
+                    if (rightWalkable) {
+                        gamePiece.setX(x2);
+                    } else {
+                        gamePiece.setX(tileX - d);
+                    }
+                    return;
+                }
+                if (topRightWalkable) {
+                    gamePiece.setPosition(x2, y2);
+                    return;
+                }
+                gamePiece.setPosition(tileX - d, y2);
+                return;
+            } else { // check right
+                if (!rightWalkable) {
+                    gamePiece.setX(tileX - d);
+                    if (topWalkable) {
+                        gamePiece.setY(y2);
+                    } else {
+                        gamePiece.setY(targetTileY - d);
+                    }
+                    return;
+                }
+                if (topRightWalkable) {
+                    gamePiece.setPosition(x2, y2);
+                    return;
+                }
+                gamePiece.setPosition(x2, targetTileY - d);
+                return;
+            }
+        }
+        // check bottom right
+        else if (tileX < targetTileX) {
+            boolean rightWalkable = isWalkable(tileX + 1, tileY);
+            boolean bottomWalkable = isWalkable(tileX, tileY - 1);
+            boolean bottomRightWalkable = isWalkable(tileX + 1, tileY - 1);
+            if (rightWalkable && bottomWalkable && bottomRightWalkable) {
+                gamePiece.setPosition(x2, y2);
+                return;
+            }
+            // check bottom
+            if (Intersector.intersectSegments(x1, y1, x2, y2, tileX, tileY, tileX + 1, tileY, null)) {
+                if (!bottomWalkable) {
+                    gamePiece.setY(tileY + d);
+                    if (rightWalkable) {
+                        gamePiece.setX(x2);
+                    } else {
+                        gamePiece.setX(targetTileX - d);
+                    }
+                    return;
+                }
+                if (bottomRightWalkable) {
+                    gamePiece.setPosition(x2, y2);
+                    return;
+                }
+                gamePiece.setPosition(targetTileX - d, y2);
+                return;
+            } else { // check right
+                if (!rightWalkable) {
+                    gamePiece.setPosition(targetTileX - d, y2);
+                    if (bottomWalkable) {
+                        gamePiece.setY(y2);
+                    } else {
+                        gamePiece.setY(tileY + d);
+                    }
+                    return;
+                }
+                if (bottomRightWalkable) {
+                    gamePiece.setPosition(x2, y2);
+                    return;
+                }
+                gamePiece.setPosition(x2, tileY + d);
+                return;
+            }
+        }
+        // check bottom left
+        else {
+            boolean leftWalkable = isWalkable(tileX - 1, tileY);
+            boolean bottomWalkable = isWalkable(tileX, tileY - 1);
+            boolean bottomLeftWalkable = isWalkable(tileX - 1, tileY - 1);
+            if (leftWalkable && bottomWalkable && bottomLeftWalkable) {
+                gamePiece.setPosition(x2, y2);
+                return;
+            }
+            // check bottom
+            if (Intersector.intersectSegments(x1, y1, x2, y2, tileX, tileY, tileX + 1, tileY, null)) {
+                if (!bottomWalkable) {
+                    gamePiece.setY(tileY + d);
+                    if (leftWalkable) {
+                        gamePiece.setX(x2);
+                    } else {
+                        gamePiece.setX(targetTileX + d);
+                    }
+                    return;
+                }
+                if (bottomLeftWalkable) {
+                    gamePiece.setPosition(x2, y2);
+                    return;
+                }
+                gamePiece.setPosition(targetTileX + d, y2);
+                return;
+            } else { // check left
+                if (!leftWalkable) {
+                    gamePiece.setPosition(tileX + d, y2);
+                    if (bottomWalkable) {
+                        gamePiece.setY(y2);
+                    } else {
+                        gamePiece.setY(tileY + d);
+                    }
+                    return;
+                }
+                if (bottomLeftWalkable) {
+                    gamePiece.setPosition(x2, y2);
+                    return;
+                }
+                gamePiece.setPosition(x2, tileY + d);
+                return;
+            }
+        }
+
+
+        // gamePiece.setPosition(x2, y2);
+    }
+
 
     public LinkedList<IntPoint> findPathList(int startX, int startY, int endX, int endY) {
-        SearchNode node = findPath(startX, startY, endX, endY);
-        if (node == null) {
-            return null;
-        }
-        LinkedList<IntPoint> points = new LinkedList<>();
-        while (node != null) {
-            points.addFirst(new IntPoint(node.x, node.y));
-            node = node.predecessor;
-        }
-        return points;
-    }
-
-    public SearchNode findPath(int startX, int startY, int endX, int endY) {
-        return findPath(startX, startY, endX, endY, 256);
-    }
-
-    // TODO: Change from dijkstra to A*
-    @SuppressWarnings("all")
-    public SearchNode findPath(int startX, int startY, int endX, int endY, int maxSteps) {
-        if (Math.abs(startX - endX) + Math.abs(startY - endY) > maxSteps) {
-            return null;
-        }
-        if (startX == endX && startY == endY) {
-            return new SearchNode(startX, startY, 0, null);
-        }
-
-
-        Tile tile = getTile(endX, endY);
-        if (tile == null || tile.isSolid) {
-            return null;
-        }
-
-        tile = getTile(startX, startY);
-        if (tile == null || tile.isSolid) {
-            return null;
-        }
-
-
-        PriorityQueue<SearchNode> points = new PriorityQueue<>();
-        Map<SearchNode, SearchNode> visitedNodes = new HashMap<>();
-
-        SearchNode startNode = searchNodes.obtain();
-        startNode.set(startX, startY, 0, null);
-
-        points.add(startNode);
-        visitedNodes.put(startNode, startNode);
-
-        int x, y, i;
-        SearchNode node, temp = searchNodes.obtain(), nextNode;
-
-        finish:
-        while (true) {
-            node = points.poll();
-            for (i = 0; i < 4; i++) {
-                x = node.x + dx[i];
-                y = node.y + dy[i];
-                Tile t = getTile(x, y);
-                if (t == null || t.isSolid) continue;
-
-
-                // calculate newCost using manhattan distance and make it for A*
-                int newCost = node.cost + Math.abs(x - endX) + Math.abs(y - endY);
-                // int newCost = node.cost + 1; // (for dijkstra)
-
-                // if (newCost > maxSteps) continue;
-
-                nextNode = visitedNodes.get(temp.set(x, y, 0, null));
-                if (nextNode != null) {
-                    if (nextNode.cost > newCost) {
-                        nextNode.cost = newCost;
-                        nextNode.predecessor = node;
-                        points.remove(nextNode);
-                        points.add(nextNode);
-                    }
-                } else {
-                    nextNode = searchNodes.obtain();
-                    nextNode.predecessor = node;
-                    nextNode.set(x, y, newCost, node);
-                    points.add(nextNode);
-                    visitedNodes.put(nextNode, nextNode);
-                }
-                if (x == endX && y == endY) {
-                    node = nextNode;
-                    break finish;
-                }
-            }
-            if (points.isEmpty()) {
-                return null;
-            }
-        }
-
-        // free all search nodes before returning
-        for (SearchNode n : visitedNodes.keySet()) {
-            searchNodes.free(n);
-        }
-        searchNodes.free(temp);
-
-        if (node.x == endX && node.y == endY) {
-            return node;
-        }
-        return null;
-
+        return PathFinder.findPathList(this, startX, startY, endX, endY, null);
     }
 
 
@@ -214,6 +335,7 @@ public abstract class Field extends World {
         }
     }
 
+    @ThreadSafe
     public boolean removeGamePiece(GamePiece gamePiece) {
         if (gamePiece == null) return false;
         synchronized (gamePiecesToRemove) {
@@ -222,33 +344,44 @@ public abstract class Field extends World {
         return true;
     }
 
+    @ThreadSafe
     protected boolean remove0(GamePiece gamePiece) {
         try {
-            remove(gamePiece);
+            // remove(gamePiece);
             gamePiece.removed();
         } catch (Exception ignored) {
         } //catch and ignore if a game piece is already removed
-        if (gamePiece.chunk != null) gamePiece.chunk.remove(gamePiece);
+        if (gamePiece.chunk != null) {
+            gamePiece.chunk.remove(gamePiece);
+            if (gamePiece instanceof TileGamePiece) {
+                gamePiece.chunk.removeTileEntity((TileGamePiece) gamePiece);
+            }
+        }
+
         return gamePieces.remove(gamePiece.getGameId()) != null;
     }
 
     protected void add0(GamePiece gamePiece, int i) {
         HashedPoint temp = points.obtain();
+        add0(gamePiece, i, temp);
+        points.free(temp);
+    }
+
+    @ThreadSafe
+    protected void add0(GamePiece gamePiece, int i, HashedPoint temp) {
         gamePieces.put(i, gamePiece);
         gamePiece.setGameId(i);
-        temp.set(MathUtils.floor(gamePiece.getCenterX() / getChunkSize()), MathUtils.floor(gamePiece.getCenterY() / getChunkSize()));
+        temp.set(MathUtils.floor(gamePiece.getX() / getChunkSize()), MathUtils.floor(gamePiece.getY() / getChunkSize()));
         temp.recalculateHash();
         Chunk chunk = chunks.get(temp);
         if (chunk == null) {
             return;
         }
         chunk.add(gamePiece); // it's okay if the game piece is already in the chunk
-
-        if (gamePiece.worldInteractable()) {
-            add(gamePiece, gamePiece.bounds.x, gamePiece.bounds.y, gamePiece.bounds.width, gamePiece.bounds.height);
+        if (gamePiece instanceof TileGamePiece) {
+            chunk.setTileEntity((TileGamePiece) gamePiece);
         }
         gamePiece.setField(this);
-        points.free(temp);
     }
 
 
@@ -270,6 +403,7 @@ public abstract class Field extends World {
         return chunk;
     }
 
+    @ThreadSafe
     public Chunk getChunk(Point point) {
         return chunks.get(point);
     }
@@ -283,7 +417,15 @@ public abstract class Field extends World {
             points.free(temp);
             return chunk;
         }
+        points.free(temp);
         return addChunk(loadChunk(chunkX, chunkY));
+    }
+
+    public Chunk addChunk(Point point) {
+        if (containsChunk(point)) {
+            return chunks.get(point);
+        }
+        return addChunk(loadChunk(point.x, point.y));
     }
 
     public abstract Chunk loadChunk(int chunkX, int chunkY);
@@ -295,6 +437,7 @@ public abstract class Field extends World {
         points.free(temp);
         return chunk;
     }
+
 
     public Chunk getChunkFromCoord(int x, int y) {
         HashedPoint temp = points.obtain();
@@ -308,6 +451,16 @@ public abstract class Field extends World {
         return chunk;
     }
 
+    @ThreadSafe
+    public Chunk getChunkFromCoord(Point point, HashedPoint temp) {
+        if (point.x < 0) temp.x = (point.x + 1) / getChunkSize() - 1;
+        else temp.x = point.x / getChunkSize();
+        if (point.y < 0) temp.y = (point.y + 1) / getChunkSize() - 1;
+        else temp.y = point.y / getChunkSize();
+        temp.recalculateHash();
+        return chunks.get(temp);
+    }
+
     public boolean removeChunk(int chunkX, int chunkY) {
         HashedPoint temp = points.obtain();
         temp.set(chunkX, chunkY);
@@ -317,6 +470,7 @@ public abstract class Field extends World {
         return success;
     }
 
+    @ThreadSafe
     public boolean containsChunk(Point chunk) {
         return chunks.containsKey(chunk);
     }
@@ -337,23 +491,24 @@ public abstract class Field extends World {
         return chunk.getTileFromWorldCoords(x, y);
     }
 
-    public void setTileGamePiece(int x, int y, GamePiece piece) {
-        Chunk chunk = getChunkFromCoord(x, y);
-        if (chunk == null) return;
-        chunk.setTileEntity(x - chunk.getChunkX() * getChunkSize(), y - chunk.getChunkY() * getChunkSize(), piece);
-    }
-
-    public GamePiece getTileGamePiece(int x, int y) {
+    public TileGamePiece getTileGamePiece(int x, int y) {
         Chunk chunk = getChunkFromCoord(x, y);
         if (chunk == null) {
             return null;
         }
-        HashedPoint temp = points.obtain();
-        temp.set(x - chunk.getChunkX() * chunk.getChunkSize(), y - chunk.getChunkY() * chunk.getChunkSize());
-        temp.recalculateHash();
-        GamePiece piece = chunk.tileGamePieces.get(temp);
-        points.free(temp);
-        return piece;
+        return (TileGamePiece) getGamePiece(chunk.getTileEntityFromWorldCoords(x, y));
+    }
+
+    public boolean isWalkable(int x, int y) {
+        Chunk chunk = getChunkFromCoord(x, y);
+        if (chunk == null) return false;
+        return chunk.isWalkableFromWorldCoords(x, y);
+    }
+
+    public boolean isWalkable(Point point, HashedPoint temp) {
+        Chunk chunk = getChunkFromCoord(point, temp);
+        if (chunk == null) return false;
+        return chunk.isWalkableFromWorldCoords(point.x, point.y);
     }
 
     public Chunk addChunk(Chunk chunk) {
@@ -361,7 +516,7 @@ public abstract class Field extends World {
         chunks.put(chunk.chunkPosition, chunk);
         chunk.field = this;
         if (isServer()) {
-            for(GamePiece gamePiece : chunk.itemsToAdd) {
+            for (GamePiece gamePiece : chunk.itemsToAdd) {
                 addGamePiece(gamePiece);
             }
         }
@@ -386,6 +541,7 @@ public abstract class Field extends World {
         return chunk;
     }
 
+    @ThreadSafe
     public boolean removeChunk(Point chunk) {
         Chunk c = chunks.remove(chunk);
         if (c == null) return false;
@@ -397,18 +553,23 @@ public abstract class Field extends World {
 
     public Chunk relocateGamePiece(GamePiece item, Chunk original) {
         HashedPoint temp = points.obtain();
-        getChunkPosition(item.getCenterX(), item.getCenterY(), temp);
+        Chunk chunk = relocateGamePiece(item, original, temp);
+        points.free(temp);
+        return chunk;
+    }
+
+    @ThreadSafe
+    public Chunk relocateGamePiece(GamePiece item, Chunk original, HashedPoint temp) {
+        getChunkPosition(item.getX(), item.getY(), temp);
         temp.recalculateHash();
         Chunk chunk = chunks.get(temp);
         if (chunk == null) {
             if (isServer() && item.shouldLoadChunk()) {
                 addChunk(temp.x, temp.y);
             } else {
-                removeGamePiece(item);
                 return null;
             }
         }
-        points.free(temp);
         return chunk;
     }
 
@@ -428,8 +589,14 @@ public abstract class Field extends World {
         //convert delta into millis and add it to time
         time += delta * 1000;
 
+
+
         for (GamePiece gamePiece : getItems()) {
-            gamePiece.tick(delta);
+            try {
+                gamePiece.tick(delta);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         for (Chunk chunk : getChunks()) {
             relocation(chunk);
@@ -448,10 +615,10 @@ public abstract class Field extends World {
             removedGamePieces.addAll(gamePiecesToRemove);
             gamePiecesToRemove.clear();
         }
-
         for (GamePiece gamePiece : removedGamePieces) {
             remove0(gamePiece);
         }
+
 
     }
 
@@ -460,21 +627,22 @@ public abstract class Field extends World {
         Iterator<GamePiece> iterator = chunk.items.iterator();
         while (iterator.hasNext()) {
             GamePiece gamePiece = iterator.next();
-            if (!chunk.bounds.contains(gamePiece.getCenterX(), gamePiece.getCenterY())) {
+            if (!chunk.bounds.contains(gamePiece.getX(), gamePiece.getY())) {
                 Chunk newChunk = relocateGamePiece(gamePiece, chunk);
                 if (newChunk != chunk) {
-                    // chunk.remove(gamePiece);
                     iterator.remove();
                     if (newChunk != null) newChunk.add(gamePiece);
+                    else {
+                        remove0(gamePiece);
+                    }
                 }
             }
         }
     }
 
 
-    @Override
-    public Set<GamePiece> getItems() {
-        return (Set<GamePiece>) super.getItems();
+    public Collection<GamePiece> getItems() {
+        return gamePieces.values();
     }
 
     public boolean isServer() {

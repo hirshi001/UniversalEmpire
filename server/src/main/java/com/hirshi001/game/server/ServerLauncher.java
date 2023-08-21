@@ -3,11 +3,10 @@ package com.hirshi001.game.server;
 import com.badlogic.gdx.utils.Array;
 import com.hirshi001.buffer.bufferfactory.BufferFactory;
 import com.hirshi001.buffer.bufferfactory.DefaultBufferFactory;
+import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.entities.GamePieces;
-import com.hirshi001.game.shared.entities.troop.Knight;
 import com.hirshi001.game.shared.entities.TestGamePiece;
 import com.hirshi001.game.shared.game.Chunk;
-import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.packets.*;
 import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.settings.Network;
@@ -28,7 +27,6 @@ import com.hirshi001.networking.packethandlercontext.PacketHandlerContext;
 import com.hirshi001.networking.packetregistrycontainer.PacketRegistryContainer;
 import com.hirshi001.networking.packetregistrycontainer.SinglePacketRegistryContainer;
 import com.hirshi001.restapi.RestAPI;
-import com.hirshi001.restapi.ScheduledExec;
 import com.hirshi001.websocketnetworkingserver.WebsocketServer;
 import org.java_websocket.server.DefaultSSLWebSocketServerFactory;
 
@@ -111,7 +109,7 @@ public class ServerLauncher {
             public void initChannel(Channel channel) {
                 channel.setChannelOption(ChannelOption.TCP_AUTO_FLUSH, true);
                 channel.setChannelOption(ChannelOption.UDP_AUTO_FLUSH, true);
-                channel.setChannelOption(ChannelOption.PACKET_TIMEOUT, TimeUnit.SECONDS.toNanos(10));
+                channel.setChannelOption(ChannelOption.PACKET_TIMEOUT, TimeUnit.SECONDS.toNanos(5));
                 channel.setChannelOption(ChannelOption.DEFAULT_SWITCH_PROTOCOL, true);
             }
         };
@@ -147,8 +145,8 @@ public class ServerLauncher {
         // TODO: Update the WebsocketServer code sot hat it has packet timeout functionality and potentially other things it is currently missing
         websocketServer.setChannelInitializer(channelInitializer);
         websocketServer.addServerListener(serverListener);
-        setSSL(websocketServer);
-        System.out.println("SSL Set");
+        // setSSL(websocketServer);
+        // System.out.println("SSL Set");
         websocketServer.startTCP().onFailure(Throwable::printStackTrace).perform().get();
 
         System.out.println("WebsocketServer started on " + websocketServer.getPort());
@@ -161,7 +159,7 @@ public class ServerLauncher {
 
         System.out.println("JavaServer started on " + javaServer.getPort());
 
-        field = new ServerField(websocketServer, new ServerChunkLoader(GameSettings.CHUNK_SIZE), GameSettings.CELL_SIZE, GameSettings.CHUNK_SIZE);
+        field = new ServerField(websocketServer, new ServerChunkLoader(GameSettings.CHUNK_SIZE), GameSettings.CHUNK_SIZE);
         for (int i = -2; i <= 2; i++) {
             for (int j = -2; j <= 2; j++) {
                 field.addChunk(i, j);
@@ -177,6 +175,8 @@ public class ServerLauncher {
         Timer timer = new Timer();
         final long period = TimeUnit.SECONDS.toMillis(1) / GameSettings.TICKS_PER_SECOND;
         TimerTask timerTask = new TimerTask() {
+
+            long lastTime = System.nanoTime();
             @Override
             public void run() {
                 try {
@@ -188,7 +188,16 @@ public class ServerLauncher {
                     for (Runnable runnable : executingRunnables) {
                         runnable.run();
                     }
-                    field.tick(GameSettings.SECONDS_PER_TICK);
+                    long currentTime = System.nanoTime();
+                    float delta = (currentTime - lastTime) / 1E9F;
+                    lastTime = currentTime;
+                    field.tick(delta);
+
+                    javaServer.checkTCPPackets();
+                    javaServer.checkUDPPackets();
+                    websocketServer.checkTCPPackets();
+                    websocketServer.checkUDPPackets();
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -201,6 +210,7 @@ public class ServerLauncher {
         };
         timer.scheduleAtFixedRate(timerTask, 0, period);
 
+        /*
         Scanner scanner = new Scanner(System.in);
         while (true) {
             String line = scanner.nextLine();
@@ -211,6 +221,8 @@ public class ServerLauncher {
                 e.printStackTrace();
             }
         }
+
+         */
     }
 
     private static void setSSL(WebsocketServer websocketServer){
@@ -287,16 +299,15 @@ public class ServerLauncher {
     }
 
     private static void spawnCommand(String[] args) {
-        if (args.length != 6) return;
+        if (args.length != 4) return;
         String name = args[1];
         float x = Float.parseFloat(args[2]);
         float y = Float.parseFloat(args[3]);
-        float width = Float.parseFloat(args[4]);
-        float height = Float.parseFloat(args[5]);
+
         GamePiece piece;
         if (name.equals("TestGamePiece")) {
             piece = new TestGamePiece();
-            piece.bounds.set(x, y, width, height);
+            piece.getPosition().set(x, y);
         } else {
             System.out.println("Unknown game piece: " + name);
             return;

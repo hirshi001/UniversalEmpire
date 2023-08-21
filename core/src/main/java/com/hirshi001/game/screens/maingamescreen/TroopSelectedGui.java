@@ -42,10 +42,18 @@ public class TroopSelectedGui extends Table {
                             @Override
                             public void onInput(String input, InputGui gui) {
                                 Array<Integer> troopIds = new Array<>();
+                                Troop strongestTroop = selectedTroops.get(0);
+                                float strength = strongestTroop.getHealth();
+
                                 for (Troop troop : selectedTroops) {
                                     troopIds.add(troop.getGameId());
+                                    if (troop.getHealth() > strength) {
+                                        strongestTroop = troop;
+                                        strength = troop.getHealth();
+                                    }
                                 }
-                                GameApp.field.createTroopGroup(GameApp.field.getControllerId(), input, troopIds);
+
+                                GameApp.field.getGameMechanics().createTroopGroup(GameApp.field.getControllerId(), input, troopIds, strongestTroop.getGameId());
 
                                 Gdx.app.postRunnable(() -> GameApp.removeGameGui(gui));
                             }
@@ -88,7 +96,7 @@ public class TroopSelectedGui extends Table {
                                     for (Troop troop : selectedTroops) {
                                         troopIds.add(troop.getGameId());
                                     }
-                                    GameApp.field.addTroopsToGroup(GameApp.field.getControllerId(), group.name, troopIds);
+                                    GameApp.field.getGameMechanics().addTroopsToGroup(GameApp.field.getControllerId(), group.name, troopIds);
                                     Gdx.app.postRunnable( ()->GameApp.removeGameGui(table));
                                 }
                             });

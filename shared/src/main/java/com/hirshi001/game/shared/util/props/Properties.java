@@ -9,6 +9,7 @@ import com.hirshi001.game.shared.util.stringutils.StringUtils;
 import com.hirshi001.networking.packet.ByteBufSerializable;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
 public class Properties implements ByteBufSerializable, Iterable<String> {
@@ -18,7 +19,7 @@ public class Properties implements ByteBufSerializable, Iterable<String> {
 
     protected Map<String, Object> properties = new HashMap<>(), localProperties = new HashMap<>();
 
-    protected List<String> modifiedProperties = new ArrayList<>(), localModifiedProperties = new ArrayList<>();
+    protected List<String> modifiedProperties = new CopyOnWriteArrayList<>(), localModifiedProperties = new CopyOnWriteArrayList<>();
 
     protected PropertiesManager manager;
 

@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.dongbat.jbump.*;
+import com.hirshi001.buffer.buffers.ByteBuffer;
 import com.hirshi001.game.shared.entities.Resource;
 import com.hirshi001.game.shared.entities.troop.Troop;
 
@@ -36,6 +37,7 @@ public class CollectResourceMovement extends Movement{
     @Override
     public boolean applyMovement(Troop troop, float delta) {
 
+        /*
         dt -= delta;
         if(dt<=0){
             dt = 2F;
@@ -71,7 +73,19 @@ public class CollectResourceMovement extends Movement{
 
         }
 
+         */
+
 
         return false;
+    }
+
+    @Override
+    public void writeSyncBytes(ByteBuffer buffer) {
+
+    }
+
+    @Override
+    public void readSyncBytes(ByteBuffer buffer) {
+
     }
 }

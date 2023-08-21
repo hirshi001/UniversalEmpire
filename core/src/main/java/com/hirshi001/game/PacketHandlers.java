@@ -102,7 +102,10 @@ public class PacketHandlers {
         GameSettings.runnablePoster.postRunnable( ()-> {
             try {
                 if (packet.type == TroopGroupPacket.OperationType.CREATE) {
-                    playerData.troopGroups.put(packet.name, new TroopGroup(field, packet.name, playerData.controllerId));
+                    TroopGroup troopGroup = new TroopGroup(field, packet.name, playerData.controllerId);
+                    troopGroup.setLeaderId(packet.troopIds[0]);
+                    System.out.println("Troop leader id: " + troopGroup.getLeaderId());
+                    playerData.troopGroups.put(packet.name, troopGroup);
                 }
 
                 if (packet.type == TroopGroupPacket.OperationType.ADD || packet.type == TroopGroupPacket.OperationType.CREATE) {

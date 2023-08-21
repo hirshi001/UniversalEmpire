@@ -31,7 +31,7 @@ public class Fireball extends Entity {
     }
 
     public Fireball(float x, float y) {
-        super(x, y, 0.5F, 0.5F);
+        super(x, y);
     }
 
     @Override
@@ -45,10 +45,7 @@ public class Fireball extends Entity {
     public void tick(float delta) {
         super.tick(delta);
         Number radius = getProperties().get("radius", 0.5F);
-        if (bounds.width != radius.floatValue() || bounds.height != radius.floatValue()) {
-            bounds.setSize(radius.floatValue(), radius.floatValue());
-            update();
-        }
+
 
 
         Number angle = getProperties().get("angle");
@@ -56,26 +53,8 @@ public class Fireball extends Entity {
             Number speed = getProperties().get("speed", 10F);
             float dx = (float) (Math.cos(angle.doubleValue()) * speed.floatValue() * delta);
             float dy = (float) (Math.sin(angle.doubleValue()) * speed.floatValue() * delta);
-
-            Response.Result result = field.move(this, bounds.x + dx, bounds.y + dy, getCollisionFilter());
-            bounds.x = result.goalX;
-            bounds.y = result.goalY;
-
-            Collisions collisions = result.projectedCollisions;
-            System.out.println("Collisions: " + collisions.size() + " x: " + bounds.x + " y: " + bounds.y);
-            if (field.isServer()) {
-                if (collisions.size() > 0) {
-                    alive = false;
-                    field.removeGamePiece(this);
-                    System.out.println("Removed fireball");
-                    collisions.sort();
-                    Item item = collisions.get(0).other;
-                    if (item instanceof LivingEntity) {
-                        LivingEntity entity = (LivingEntity) item;
-                        entity.damage(10F);
-                    }
-                }
-            }
+            setPosition(getX() + dx, getY() + dy);
+            update();
         }
 
         if (field.isServer()) {
@@ -107,7 +86,6 @@ public class Fireball extends Entity {
         getProperties().put("r", radius);
         GameSettings.runnablePoster.postRunnable(() -> {
             float r = getProperties().get("r", 1F);
-            bounds.setSize(r * 2, r * 2);
             update();
         });
     }
@@ -139,10 +117,6 @@ public class Fireball extends Entity {
         return true;
     }
 
-    @Override
-    public CollisionFilter getCollisionFilter() {
-        return filter;
-    }
 
     @Override
     public boolean isProjectile() {

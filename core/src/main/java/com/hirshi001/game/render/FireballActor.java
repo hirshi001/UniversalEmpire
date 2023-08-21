@@ -27,7 +27,7 @@ public class FireballActor extends GamePieceActor<Fireball> {
 
     @Override
     public void render(SpriteBatch batch, float delta) {
-        gamePiece.bounds.getPosition(position);
+        position.set(gamePiece.getPosition());
         float dst = position.dst(displayPosition);
         if (dst > 1f) {
             displayPosition.set(position);
@@ -36,9 +36,9 @@ public class FireballActor extends GamePieceActor<Fireball> {
         }
 
         Number angle = gamePiece.getProperties().get("angle", 0F);
-        transform.setToTranslation(displayPosition.x, displayPosition.y);
+        transform.setToTranslation(displayPosition.x-0.25F, displayPosition.y-0.25F);
         transform.rotateRad(angle.floatValue() - MathUtils.PI/4);
-        batch.draw(region, gamePiece.bounds.width, gamePiece.bounds.height, transform);
+        batch.draw(region, 0.5F, 0.5F, transform);
     }
 
     @Override

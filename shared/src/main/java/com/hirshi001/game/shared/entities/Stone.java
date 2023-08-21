@@ -4,7 +4,11 @@ public class Stone extends Resource {
 
     public Stone(){
         super();
-        bounds.setSize(0.8F, 0.8F);
+    }
+
+
+    public Stone(int x, int y){
+        super(x, y);
     }
     @Override
     public void harvest() {

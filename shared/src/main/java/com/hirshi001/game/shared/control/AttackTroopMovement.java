@@ -1,5 +1,6 @@
 package com.hirshi001.game.shared.control;
 
+import com.hirshi001.buffer.buffers.ByteBuffer;
 import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.entities.LivingEntity;
 import com.hirshi001.game.shared.entities.troop.Troop;
@@ -28,6 +29,16 @@ public class AttackTroopMovement extends Movement {
 //            return true;
 //        }
         return false;
+    }
+
+    @Override
+    public void writeSyncBytes(ByteBuffer buffer) {
+
+    }
+
+    @Override
+    public void readSyncBytes(ByteBuffer buffer) {
+
     }
 
 }

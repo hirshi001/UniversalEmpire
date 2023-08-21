@@ -19,7 +19,9 @@ public class StoneTileRenderer extends DefaultTileRenderer<Tile>{
             super.render(batch, field, x, y);
         }
         else{
-            batch.draw(region, gamePiece.bounds.x, gamePiece.bounds.y, gamePiece.bounds.width, gamePiece.bounds.height);
+            batch.draw(region, gamePiece.getX()-0.5F, gamePiece.getY()-0.5F, 1F, 1F);
         }
     }
+
+
 }

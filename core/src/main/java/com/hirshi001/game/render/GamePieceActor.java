@@ -26,7 +26,8 @@ public abstract class GamePieceActor<T extends GamePiece> {
 
     public void debugRender(ShapeRenderer renderer){
         renderer.setColor(Color.BLUE);
-        renderer.rect(gamePiece.bounds.x, gamePiece.bounds.y, gamePiece.bounds.width, gamePiece.bounds.height);
+        renderer.circle(gamePiece.getX(), gamePiece.getY(), 0.25F, 20);
+
         LinePath<Vector2> path = gamePiece.getProperties().get("path");
         if(path!=null){
             for(LinePath.Segment<Vector2> segment:path.getSegments()){

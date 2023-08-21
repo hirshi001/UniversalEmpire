@@ -17,7 +17,7 @@ public class Knight extends Troop {
     public void setField(Field field) {
         super.setField(field);
         setHealth(200);
-        setSpeed(2F);
+        setSpeed(3F);
         setAttackRadius(2F);
         setAttackCooldown(2F);
     }

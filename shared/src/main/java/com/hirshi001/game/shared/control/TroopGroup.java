@@ -12,6 +12,7 @@ import com.hirshi001.networking.packet.ByteBufSerializable;
 public class TroopGroup implements ByteBufSerializable {
 
     public Array<Integer> troops = new Array<>();
+    public int leaderId;
 
     public Field field;
     public String name;
@@ -21,6 +22,14 @@ public class TroopGroup implements ByteBufSerializable {
         this.field = field;
         this.name = name;
         this.playerControllerId = playerControllerId;
+    }
+
+    public void setLeaderId(int leaderId) {
+        this.leaderId = leaderId;
+    }
+
+    public int getLeaderId() {
+        return leaderId;
     }
 
     public void addTroop(Troop troop) {
@@ -69,27 +78,6 @@ public class TroopGroup implements ByteBufSerializable {
 
     }
 
-    public void moveTroops(float destX, float destY, float radius) {
-        for(int i = 0; i < troops.size; i++){
-            Integer troopId = troops.get(i);
-            float x, y;
-
-            // amount of times to try to find a valid position
-            int checkIterations = 5;
-            do {
-                x = destX + (MathUtils.random() * radius * 2 - radius);
-                y = destY + (MathUtils.random() * radius * 2 - radius);
-                checkIterations++;
-                if (checkIterations <= 0) break;
-            }
-            while (field.getTile((int) Math.floor(x), (int) Math.floor(y)).isSolid);
-
-            Troop troop = (Troop) field.getGamePiece(troopId);
-            if (troop != null) {
-                troop.setMovement(new MoveTroopMovement(x, y, 1F));
-            }
-        }
-    }
 
     @Override
     public void writeBytes(ByteBuffer buffer) {

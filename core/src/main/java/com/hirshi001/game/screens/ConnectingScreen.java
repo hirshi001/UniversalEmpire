@@ -51,7 +51,7 @@ public class ConnectingScreen extends GameScreen {
         NetworkData networkData = new DefaultNetworkData(Network.PACKET_ENCODER_DECODER, packetRegistryContainer);
         try {
             Gdx.app.log("ConnectingScreen", "Creating client");
-            GameApp.Game().client = client = app.networkFactory.createClient(networkData, app.bufferFactory, ip, port);
+            GameApp.client = client = GameApp.networkFactory.createClient(networkData, GameApp.bufferFactory, ip, port);
             client.setChannelInitializer(channel -> {
                 // channel.setChannelOption(ChannelOption.TCP_AUTO_FLUSH, true);
                 channel.setChannelOption(ChannelOption.UDP_AUTO_FLUSH, true);
@@ -75,6 +75,7 @@ public class ConnectingScreen extends GameScreen {
 
                 @Override
                 public void onSent(PacketHandlerContext<?> context) {
+                    Gdx.app.log("Packet Sent", context.packet.getClass().getName());
                 }
 
                 @Override
@@ -97,7 +98,7 @@ public class ConnectingScreen extends GameScreen {
         if (connectFuture.isSuccess()) {
             try {
                 Gdx.app.log("ConnectingScreen", "TCP Connected to server");
-                app.client.startUDP().perform().get();
+                GameApp.client.startUDP().perform().get();
                 Gdx.app.log("ConnectingScreen", "UDP Connected to server");
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();

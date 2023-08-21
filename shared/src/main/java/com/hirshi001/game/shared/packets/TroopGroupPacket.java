@@ -35,7 +35,7 @@ public class TroopGroupPacket extends Packet {
         out.writeByte(type.ordinal());
         ByteBufUtil.writeStringToBuf(name, out);
         if(type==OperationType.DELETE) return;
-        out.writeByte(troopIds.length);
+        out.writeInt(troopIds.length);
         for(int i : troopIds){
             out.writeInt(i);
         }
@@ -47,7 +47,7 @@ public class TroopGroupPacket extends Packet {
         type = OperationType.values()[in.readByte()];
         name = ByteBufUtil.readStringFromBuf(in);
         if(type==OperationType.DELETE) return;
-        troopIds = new int[in.readByte()];
+        troopIds = new int[in.readInt()];
         for(int i = 0; i < troopIds.length; i++){
             troopIds[i] = in.readInt();
         }

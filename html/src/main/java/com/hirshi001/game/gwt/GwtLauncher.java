@@ -32,7 +32,7 @@ public class GwtLauncher extends GwtApplication {
 		public ApplicationListener createApplicationListener () {
 			GwtWebSockets.initiate();
 			RestAPI.setFactory(new GWTRestFutureFactory());
-			return new GameApp(null, new DefaultBufferFactory(), new SecureGWTNetworkingFactory(), "game.hrishislife.com", 443);
+			return new GameApp(null, new DefaultBufferFactory(), new GWTNetworkingFactory(), "localhost", 443);
 		}
 
 	@Override

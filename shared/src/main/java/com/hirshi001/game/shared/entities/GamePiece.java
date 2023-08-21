@@ -16,7 +16,7 @@ import com.hirshi001.networking.packet.ByteBufSerializable;
 
 public abstract class GamePiece extends Item implements ID, ByteBufSerializable {
 
-    public final Rectangle bounds;
+    public Vector2 position;
     public Field field;
     public Chunk chunk;
     private int gameId;
@@ -25,23 +25,10 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
     public boolean alive;
     public boolean softLoaded = false;
     private final Properties properties = GameSettings.MANAGER.createNewProps();
-
-
-    public static final CollisionFilter DEFAULT_COLLISION_FILTER = (item, other) -> {
-        GamePiece gamePiece = (GamePiece) item;
-        GamePiece otherGamePiece = (GamePiece) other;
-        if (!gamePiece.worldInteractable() || !otherGamePiece.worldInteractable()) {
-            return null;
-        }
-        if (gamePiece.isStatic() || otherGamePiece.isStatic()) {
-            return Response.slide;
-        }
-        return Response.cross;
-    };
-
+    public boolean syncedRecently = false;
 
     public GamePiece() {
-        bounds = new Rectangle();
+        position = new Vector2();
         setID(GamePieces.getId(this));
     }
 
@@ -76,16 +63,33 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
         this.gameId = gameId;
     }
 
-    public float getCenterX() {
-        return bounds.x + bounds.width / 2;
+    public float getX() {
+        return position.x;
     }
 
-    public float getCenterY() {
-        return bounds.y + bounds.height / 2;
+    public float getY() {
+        return position.y;
     }
 
-    public abstract boolean isStatic();
+    public Vector2 getPosition() {
+        return position;
+    }
 
+    public void setPosition(Vector2 position) {
+        this.position = position;
+    }
+
+    public void setPosition(float x, float y) {
+        this.position.set(x, y);
+    }
+
+    public void setY(float y) {
+        this.position.y = y;
+    }
+
+    public void setX(float x) {
+        this.position.x = x;
+    }
 
     public boolean worldInteractable() {
         return true;
@@ -99,12 +103,7 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
         return false;
     }
 
-    public CollisionFilter getCollisionFilter() {
-        return DEFAULT_COLLISION_FILTER;
-    }
-
     public void update() {
-        if (worldInteractable() && field != null) field.update(this, bounds.x, bounds.y, bounds.width, bounds.height);
     }
 
     public boolean collides() {
@@ -114,25 +113,23 @@ public abstract class GamePiece extends Item implements ID, ByteBufSerializable 
     @Override
     public void writeBytes(ByteBuffer buffer) {
         buffer.writeInt(getGameId());
-        ByteBufferUtil.writeRectangle(buffer, bounds);
+        ByteBufferUtil.writeVector2(buffer, position);
         properties.writeBytes(buffer);
     }
 
     @Override
     public void readBytes(ByteBuffer buffer) {
         setGameId(buffer.readInt());
-        ByteBufferUtil.readRectangle(buffer, bounds);
+        ByteBufferUtil.readVector2(buffer, position);
         properties.readBytes(buffer);
     }
 
     public void writeSyncBytes(ByteBuffer buffer) {
-        buffer.writeFloat(bounds.x);
-        buffer.writeFloat(bounds.y);
+        ByteBufferUtil.writeVector2(buffer, position);
     }
 
     public void readSyncBytes(ByteBuffer buffer) {
-        bounds.x = buffer.readFloat();
-        bounds.y = buffer.readFloat();
+        ByteBufferUtil.readVector2(buffer, position);
     }
 
     public Properties getProperties() {

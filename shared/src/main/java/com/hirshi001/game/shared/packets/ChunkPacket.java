@@ -50,8 +50,14 @@ public class ChunkPacket extends Packet {
             out.writeInt(item.getID());
             item.writeBytes(out);
         }
-        if(items.size()==7) {
-            System.out.println("chunk packet: " + chunk.getChunkX() + " " + chunk.getChunkY());
+
+        // write tile game pieces
+
+        int[][] tileEntities = chunk.getTileEntities();
+        for (i = 0; i < chunk.getChunkSize(); i++) {
+            for (j = 0; j < chunk.getChunkSize(); j++) {
+                out.writeInt(tileEntities[i][j]);
+            }
         }
     }
 
@@ -74,19 +80,23 @@ public class ChunkPacket extends Packet {
             }
 
             // read game pieces
-            GamePiece item = null;
-            try {
-                size = in.readInt();
-                for (i = 0; i < size; i++) {
-                    id = in.readInt();
-                    item = GamePieces.registry.get(id).get();
-                    item.readBytes(in);
-                    chunk.add(item);
-                }
-            }catch (Exception e){
-                System.err.println("failed to read the following game piece: " + item + " with id: " + id);
-                e.printStackTrace();
+            GamePiece item;
+            size = in.readInt();
+            for (i = 0; i < size; i++) {
+                id = in.readInt();
+                item = GamePieces.registry.get(id).get();
+                item.readBytes(in);
+                chunk.add(item);
             }
+
+            // read tile game pieces
+            int[][] tileEntities = chunk.getTileEntities();
+            for (i = 0; i < chunk.getChunkSize(); i++) {
+                for (j = 0; j < chunk.getChunkSize(); j++) {
+                    tileEntities[i][j] = in.readInt();
+                }
+            }
+
         }catch (Exception e){
             System.out.println("size: " + size);
             System.out.println("chunk: " + chunkPos);

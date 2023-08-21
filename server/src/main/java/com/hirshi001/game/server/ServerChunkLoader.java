@@ -26,28 +26,27 @@ public class ServerChunkLoader implements ChunkLoader {
 
         int radius = 1024;
         GridPoint2 center = new GridPoint2(radius, radius);
-        OrderedMap<GridPoint2, Array<GridPoint2>> resourcePointMap = StandalonePoissonDisk.sampleCircle(center, radius, 32, 2*radius, 2*radius);
+        OrderedMap<GridPoint2, Array<GridPoint2>> resourcePointMap = StandalonePoissonDisk.sampleCircle(center, radius, 32, 2 * radius, 2 * radius);
         // OrderedMap<GridPoint2, Array<GridPoint2>> resourcePointMap = StandalonePoissonDisk.sampleRectangle(new GridPoint2(0, 0), new GridPoint2(2048, 2048), 10);
 
-        resourcePointMap.removeIndex(0); // remove center point
+        // resourcePointMap.removeIndex(0); // remove center point
 
         GridPoint2 offset = new GridPoint2();
-        for(GridPoint2 point:resourcePointMap.keys()){
-            if(Math.random()<0.75) continue;
+        for (GridPoint2 point : resourcePointMap.keys()) {
+            // if(Math.random()<0.75) continue;
             int smallerRadius = MathUtils.random(5, 12);
             GridPoint2 newCenter = new GridPoint2(smallerRadius, smallerRadius);
-            offset.set(- center.x - newCenter.x + point.x, -center.y - newCenter.y + point.y);
-            addResource(StandalonePoissonDisk.sampleCircle(newCenter, smallerRadius, 2F, 2*smallerRadius, 2*smallerRadius, 10, random), offset);
+            offset.set(-center.x - newCenter.x + point.x, -center.y - newCenter.y + point.y);
+            addResource(StandalonePoissonDisk.sampleCircle(newCenter, smallerRadius, 2F, 2 * smallerRadius, 2 * smallerRadius, 10, random), offset);
         }
-
 
 
     }
 
-    private void addResource(OrderedMap<GridPoint2, Array<GridPoint2>> map, GridPoint2 offset){
+    private void addResource(OrderedMap<GridPoint2, Array<GridPoint2>> map, GridPoint2 offset) {
         HashedPoint chunkPoint = new HashedPoint();
         for (GridPoint2 point : map.keys()) {
-            if(Math.random()<0.2) continue;
+            if (Math.random() < 0.2) continue;
 
 
             point.x += offset.x;
@@ -74,10 +73,7 @@ public class ServerChunkLoader implements ChunkLoader {
         int i, j;
         for (i = 0; i < chunkSize; i++) {
             for (j = 0; j < chunkSize; j++) {
-                double random = Math.random();
-
-                if (random < 0.1) tiles[i][j] = Tiles.STONE;
-                else tiles[i][j] = Tiles.GRASS;
+                tiles[i][j] = Tiles.GRASS;
             }
         }
 
@@ -88,10 +84,11 @@ public class ServerChunkLoader implements ChunkLoader {
             Array<GridPoint2> resources = resourcePoints.remove(point);
 
             for (GridPoint2 rp : resources) {
-                Stone stone = new Stone();
+                Stone stone = new Stone(rp.x, rp.y);
                 i++;
-                stone.bounds.setPosition(rp.x - stone.bounds.width / 2 + MathUtils.random(-0.3F, 0.3F), rp.y - stone.bounds.height / 2 + MathUtils.random(-0.3F, 0.3F));
-                chunk.addToItemsToAdd(stone); // We can't use chunk.add because the hashCode of the Stone is equal to gameId which it currently does not have
+                if (chunk.setTileEntity(stone)) {
+                    chunk.addToItemsToAdd(stone);
+                }
             }
         }
 

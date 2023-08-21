@@ -13,7 +13,7 @@ public class CircleGamePieceActor extends GamePieceActor<CircleGamePiece> {
 
     @Override
     public void render(SpriteBatch batch, float delta) {
-        gamePiece.bounds.getPosition(position);
+        position.set(gamePiece.getPosition());
         float dst = position.dst(displayPosition);
         if (dst > 1f) {
             displayPosition.set(position);

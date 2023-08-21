@@ -48,8 +48,8 @@ dependencies {
     implementation "com.github.hirshi001:bytebuffer:$byteBufferVersion:sources"
 
     implementation "com.github.hirshi001:betternetworking:$betterNetworkingVersion:sources"
-    implementation "com.github.hirshi001:gwtNetworkingLibrary:$gwtNetworkingVersion"
-    implementation "com.github.hirshi001:gwtNetworkingLibrary:$gwtNetworkingVersion:sources"
+    implementation "com.github.hirshi001:gwtnetworkinglibrary:$gwtNetworkingVersion"
+    implementation "com.github.hirshi001:gwtnetworkinglibrary:$gwtNetworkingVersion:sources"
 
 
     implementation "com.github.MrStahlfelge.gdx-websockets:html:$wsVersion"

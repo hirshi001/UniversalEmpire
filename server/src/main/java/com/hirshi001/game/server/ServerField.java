@@ -1,18 +1,20 @@
 package com.hirshi001.game.server;
 
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.utils.Array;
 import com.hirshi001.game.shared.control.TroopGroup;
-import com.hirshi001.game.shared.entities.troop.Troop;
+import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
-import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.game.PlayerData;
-import com.hirshi001.game.shared.packets.*;
+import com.hirshi001.game.shared.packets.GamePieceDespawnPacket;
+import com.hirshi001.game.shared.packets.GamePieceSpawnPacket;
+import com.hirshi001.game.shared.packets.PropertyPacket;
+import com.hirshi001.game.shared.packets.SyncPacket;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.Point;
 import com.hirshi001.game.shared.util.props.Properties;
 import com.hirshi001.networking.network.server.Server;
+import com.hirshi001.restapi.RestAPI;
 
 import java.util.*;
 
@@ -24,8 +26,8 @@ public class ServerField extends Field {
     private int nextControllerId = 0;
 
 
-    public ServerField(Server server, ChunkLoader loader, float cellSize, int chunkSize) {
-        super(cellSize, chunkSize);
+    public ServerField(Server server, ChunkLoader loader, int chunkSize) {
+        super(chunkSize, new ServerGameMechanics(), RestAPI.getDefaultExecutor());
         this.server = server;
         this.loader = loader;
     }
@@ -34,78 +36,6 @@ public class ServerField extends Field {
         return nextControllerId++;
     }
 
-    @Override
-    public void createTroopGroup(int playerId, String name, Array<Integer> troopIds) {
-        PlayerData playerData = players.get(playerId);
-        if(playerData != null) {
-            TroopGroup troopGroup = new TroopGroup(this, name, playerId);
-            troopGroup.addTroops(troopIds);
-            playerData.troopGroups.put(name, troopGroup);
-            playerData.channel.sendTCP(new TroopGroupPacket(TroopGroupPacket.OperationType.CREATE, name, troopIds), null).perform();
-        }
-    }
-
-    @Override
-    public void deleteTroopGroup(int playerId, String name) {
-        PlayerData playerData = players.get(playerId);
-        if(playerData != null) {
-            TroopGroup troopGroup = playerData.troopGroups.remove(name);
-            if(troopGroup!=null){
-                for(int i=0;i<troopGroup.troops.size;i++){
-                    GamePiece piece = getGamePiece(troopGroup.troops.get(i));
-                    if(piece instanceof Troop troop){
-                        troop.setGroup(null);
-                    }
-                }
-            }
-            playerData.channel.sendTCP(new TroopGroupPacket(TroopGroupPacket.OperationType.DELETE, name, null), null).perform();
-        }
-    }
-
-    @Override
-    public TroopGroup getTroopGroup(int playerId, String name) {
-        PlayerData playerData = players.get(playerId);
-        if (playerData != null) {
-            return playerData.troopGroups.get(name);
-        }
-        return null;
-    }
-
-    @Override
-    public void addTroopsToGroup(int playerId, String name, Array<Integer> troopIds) {
-        PlayerData playerData = players.get(playerId);
-        if (playerData != null) {
-
-            for(int i=0; i<troopIds.size; i++){
-                GamePiece piece = getGamePiece(troopIds.get(i));
-                if(piece instanceof Troop troop){
-                    TroopGroup oldGroup = troop.getGroup();
-                    if(oldGroup!=null) {
-                        oldGroup.removeTroop(troop);
-                    }
-                }
-            }
-
-            TroopGroup troopGroup = playerData.troopGroups.get(name);
-            if (troopGroup != null) {
-                troopGroup.addTroops(troopIds);
-            }
-
-            playerData.channel.sendTCP(new TroopGroupPacket(TroopGroupPacket.OperationType.ADD, name, troopIds), null).perform();
-        }
-    }
-
-    @Override
-    public void removeTroopsFromGroup(int playerId, String name, Array<Integer> troopIds) {
-        PlayerData playerData = players.get(playerId);
-        if (playerData != null) {
-            TroopGroup troopGroup = playerData.troopGroups.get(name);
-            if (troopGroup != null) {
-                troopGroup.removeTroops(troopIds);
-            }
-            playerData.channel.sendTCP(new TroopGroupPacket(TroopGroupPacket.OperationType.REMOVE, name, troopIds), null).perform();
-        }
-    }
 
     @Override
     public Chunk loadChunk(int x, int y) {
@@ -165,7 +95,8 @@ public class ServerField extends Field {
             dt = 0;
             for (PlayerData playerData : players.values()) {
                 for (TroopGroup troopGroup : playerData.troopGroups.values()) {
-                    troopGroup.moveTroops(MathUtils.random(-20, 10), MathUtils.random(-20, 20), 2);
+                    getGameMechanics().moveTroopGroup(playerData.controllerId, troopGroup.name, MathUtils.random(-20, 10), MathUtils.random(-20, 20));
+                    // troopGroup.moveTroops(MathUtils.random(-20, 10), MathUtils.random(-20, 20), 2);
                 }
             }
         }
@@ -185,17 +116,31 @@ public class ServerField extends Field {
         }
         super.tick(delta);
 
+        // every frame, only a maximum of 10 game pieces can send sync packets in order to prevent flooding
+        int piecesToSync = 10;
         for (GamePiece gamePiece : getItems()) {
+            if (gamePiece.syncedRecently || !gamePiece.needsSync()) continue;
+
             ServerChunk chunk = (ServerChunk) gamePiece.chunk;
-            if (!gamePiece.isStatic() && gamePiece.needsSync()) {
-                for (PlayerData playerData : chunk.trackers) {
-                    playerData.channel.sendUDP(new SyncPacket(time, gamePiece), null).perform();
-                }
-                for (PlayerData playerData : chunk.softTrackers) {
-                    playerData.channel.sendUDP(new SyncPacket(time, gamePiece), null).perform();
-                }
+
+            for (PlayerData playerData : chunk.trackers) {
+                playerData.channel.sendUDP(new SyncPacket(time, gamePiece), null).perform();
+            }
+            for (PlayerData playerData : chunk.softTrackers) {
+                playerData.channel.sendUDP(new SyncPacket(time, gamePiece), null).perform();
             }
 
+            gamePiece.syncedRecently = true;
+            piecesToSync--;
+            if (piecesToSync <= 0) break;
+
+        }
+
+        for (GamePiece gamePiece : getItems()) {
+            if (piecesToSync > 0) {
+                gamePiece.syncedRecently = false;
+            }
+            ServerChunk chunk = (ServerChunk) gamePiece.chunk;
             Properties properties = gamePiece.getProperties();
             List<String> modified = properties.getModifiedProperties();
             for (String key : modified) {

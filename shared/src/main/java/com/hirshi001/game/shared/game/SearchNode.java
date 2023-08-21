@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class SearchNode implements Comparable<SearchNode>{
 
-    public int x, y, cost;
+    public int x, y, cost, costTo;
     public SearchNode predecessor;
 
     public SearchNode(){

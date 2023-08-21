@@ -22,8 +22,6 @@ public class CircleGamePiece extends GamePiece {
     @Override
     public void setField(Field field) {
         super.setField(field);
-        bounds.width=1F;
-        bounds.height=1F;
         update();
         if(field.isServer()){
             Properties props = getProperties();
@@ -40,13 +38,8 @@ public class CircleGamePiece extends GamePiece {
         }
 
         if(owner!=null){
-            bounds.setPosition(owner.getCenterX() + distFromOwner*MathUtils.cos(deltaTime), owner.getCenterY() + distFromOwner*MathUtils.sin(deltaTime));
+            setPosition(owner.getX() + distFromOwner*MathUtils.cos(deltaTime), owner.getY() + distFromOwner*MathUtils.sin(deltaTime));
         }
-    }
-
-    @Override
-    public boolean isStatic() {
-        return false;
     }
 
     @Override

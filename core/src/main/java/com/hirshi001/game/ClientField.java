@@ -1,5 +1,7 @@
 package com.hirshi001.game;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ai.fma.FormationPattern;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.hirshi001.game.render.ActorMap;
@@ -16,6 +18,8 @@ import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.Point;
 import com.hirshi001.networking.network.client.Client;
 import com.hirshi001.networking.packethandlercontext.PacketType;
+import com.hirshi001.restapi.RestAPI;
+import com.hirshi001.restapi.ScheduledExec;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ClientField extends Field {
 
-    private final Client client;
+    public final Client client;
     public final PlayerData playerData = new PlayerData();
     private final Map<Point, Long> chunkLastRequested = new HashMap<>();
     private final Map<Chunk, Float> chunkLife = new HashMap<>();
@@ -41,75 +45,13 @@ public class ClientField extends Field {
         return playerData.controllerId;
     }
 
-    public ClientField(Client client, float cellSize, int chunkSize) {
-        super(cellSize, chunkSize);
+    public ClientField(Client client, int chunkSize) {
+        super(chunkSize, new ClientGameMechanics(), RestAPI.getDefaultExecutor());
         this.client = client;
     }
 
     public void setFieldRender(FieldRender fieldRender) {
         this.fieldRender = fieldRender;
-    }
-
-    /**
-     * Sends a request to the server to create a new troop group. The request may not be accepted by the server, but if
-     * it is, the server will send a TroopGroupPacket with the newly created troop group.
-     *
-     * @param playerId the id of the player who is creating the troop group - must be this players id
-     * @param name     the name of the troop group
-     * @param troopIds the ids of the troops to add to the group
-     */
-    @Override
-    public void createTroopGroup(int playerId, String name, Array<Integer> troopIds) {
-        if (playerId != getControllerId()) return;
-        client.getChannel().send(new TroopGroupPacket(TroopGroupPacket.OperationType.CREATE, name, troopIds), null, PacketType.TCP).perform();
-    }
-
-    /**
-     * Sends a request to the server to delete a troop group. The request may not be accepted by the server, but if it
-     * is, the server will send a TroopGroupPacket with the deleted troop group.
-     *
-     * @param playerId the id of the player who is deleting the troop group - must be this players id
-     * @param name     the name of the troop group
-     */
-    @Override
-    public void deleteTroopGroup(int playerId, String name) {
-        if (playerId != getControllerId()) return;
-        client.getChannel().send(new TroopGroupPacket(TroopGroupPacket.OperationType.DELETE, name, null), null, PacketType.TCP).perform();
-    }
-
-    /**
-     * Sends a request to the server to add troops to a troop group. The request may not be accepted by the server, but
-     * if it is, the server will send a TroopGroupPacket with the updated troop group.
-     *
-     * @param playerId the id of the player who is adding the troops - must be this players id
-     * @param name     the name of the troop group
-     * @param troopIds the ids of the troops to add to the group
-     */
-    @Override
-    public void addTroopsToGroup(int playerId, String name, Array<Integer> troopIds) {
-        if (playerId != getControllerId()) return;
-        client.getChannel().send(new TroopGroupPacket(TroopGroupPacket.OperationType.ADD, name, troopIds), null, PacketType.TCP).perform();
-    }
-
-    /**
-     * Sends a request to the server to remove troops from a troop group. The request may not be accepted by the server,
-     * but if it is, the server will send a TroopGroupPacket with the updated troop group.
-     *
-     * @param playerId the id of the player who is removing the troops - must be this players id
-     * @param name     the name of the troop group
-     * @param troopIds the ids of the troops to remove from the group
-     */
-    @Override
-    public void removeTroopsFromGroup(int playerId, String name, Array<Integer> troopIds) {
-        client.getChannel().send(new TroopGroupPacket(TroopGroupPacket.OperationType.REMOVE, name, troopIds), null, PacketType.TCP).perform();
-    }
-
-    @Override
-    public TroopGroup getTroopGroup(int playerId, String name) {
-        if (playerId == getControllerId()) {
-            return playerData.troopGroups.get(name);
-        }
-        return null;
     }
 
     @Override
@@ -123,15 +65,21 @@ public class ClientField extends Field {
         if (containsChunk(x, y)) {
             return getChunk(x, y);
         }
+
         HashedPoint point = new HashedPoint(x, y);
+        int chunkRequestTime = 1;
         if (chunkLastRequested.containsKey(point)) {
             long lastRequestTime = chunkLastRequested.get(point);
-            if (System.currentTimeMillis() - lastRequestTime < TimeUnit.SECONDS.toMillis(1)) {
+            if (System.nanoTime() - lastRequestTime < TimeUnit.SECONDS.toNanos(chunkRequestTime)) {
                 return null;
             }
         }
-        chunkLastRequested.put(new HashedPoint(point.x, point.y), System.currentTimeMillis());
-        client.getChannel().sendDeferred(new TrackChunkPacket(point.x, point.y), null, PacketType.TCP);
+        chunkLastRequested.put(new HashedPoint(point.x, point.y), System.nanoTime());
+        try {
+            client.getChannel().sendDeferred(new TrackChunkPacket(point.x, point.y), null, PacketType.TCP);
+        }catch (Exception e){
+            Gdx.app.getApplicationLogger().error("TrackChunkPacket", "Error sending TrackChunkPacket", e);
+        }
         return null;
     }
 
@@ -145,18 +93,19 @@ public class ClientField extends Field {
     @Override
     public void tick(float delta) {
         if (client.isOpen()) {
-            maintainConnection();
+            // maintainConnection();
         }
 
         handleChunkLoading(delta);
         super.tick(delta);
     }
 
+    MaintainConnectionPacket maintainConnectionPacket = new MaintainConnectionPacket();
     protected void maintainConnection() {
         if (client.supportsUDP())
-            client.getChannel().sendDeferred(new MaintainConnectionPacket(), null, PacketType.UDP);
+            client.getChannel().sendDeferred(maintainConnectionPacket, null, PacketType.UDP);
         else
-            client.getChannel().sendDeferred(new MaintainConnectionPacket(), null, PacketType.TCP);
+            client.getChannel().sendDeferred(maintainConnectionPacket, null, PacketType.TCP);
     }
 
     protected void handleChunkLoading(float delta) {

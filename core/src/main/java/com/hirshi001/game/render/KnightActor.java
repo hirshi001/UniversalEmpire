@@ -40,12 +40,15 @@ public class KnightActor extends TroopActor<Knight> {
     @Override
     public void render(SpriteBatch batch, float delta) {
         float lastX = displayPosition.x;
-        gamePiece.bounds.getPosition(position);
+        position.set(gamePiece.getPosition());
         float dst = position.dst(displayPosition);
-        if (dst > 3F) {
+        if(dst > 10F) {
             displayPosition.set(position);
-        } else if (dst > 0.1f) {
-            displayPosition.interpolate(position, 0.3F, Interpolation.linear);
+        }
+        else if (dst > 5F) {
+            displayPosition.interpolate(position, 0.5F, Interpolation.linear);
+        } else if (dst > 0.1F) {
+            displayPosition.interpolate(position, 0.1F, Interpolation.linear);
         }
         boolean facingLeft = lastX > displayPosition.x;
 
@@ -53,10 +56,10 @@ public class KnightActor extends TroopActor<Knight> {
         TextureRegion region = getAnimation().getKeyFrame(time);
 
         if (region != null) {
-            float size = 1.5F;
+            float size = 1F;
             float halfSize = size / 2F;
-            float x = displayPosition.x + gamePiece.bounds.width / 2F - halfSize;
-            float y = displayPosition.y + gamePiece.bounds.height / 2F - halfSize;
+            float x = displayPosition.x - halfSize;
+            float y = displayPosition.y;// + gamePiece.bounds.height / 2F - halfSize;
             if (facingLeft) batch.draw(region, x, y, size, size);
             else batch.draw(region, x + size, y, -size, size);
             super.render(batch, delta);

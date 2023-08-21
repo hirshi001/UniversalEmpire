@@ -7,6 +7,7 @@ import com.hirshi001.game.shared.entities.troop.Troop;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.entities.GamePiece;
+import com.hirshi001.game.shared.game.GameMechanics;
 import com.hirshi001.game.shared.game.PlayerData;
 import com.hirshi001.game.shared.packets.*;
 import com.hirshi001.game.shared.settings.GameSettings;
@@ -55,11 +56,15 @@ public class PacketHandlers {
         ctx.channel.sendTCP(new GameInitPacket(playerData.controllerId).setResponsePacket(ctx.packet), null).perform();
 
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        for (int i = 0; i < 20; i++) {
-            Knight knight = new Knight();
-            knight.setControllerId(playerData.controllerId);
-            knight.bounds.setPosition(random.nextInt(-5, 10), random.nextInt(-5, 10));
-            field.addGamePiece(knight);
+        for (int i = 0; i < 500; i++) {
+            float x = random.nextFloat() * 10 - 5;
+            float y = random.nextFloat() * 10 - 5;
+            if (field.isWalkable((int) (Math.floor(x)), (int) Math.floor(y))) {
+                Knight knight = new Knight();
+                knight.setControllerId(playerData.controllerId);
+                knight.setPosition(x, y);
+                field.addGamePiece(knight);
+            }
         }
 
     }
@@ -91,15 +96,17 @@ public class PacketHandlers {
         final Array<Integer> troopIds = temp;
 
         GameSettings.runnablePoster.postRunnable(() -> {
+            GameMechanics mechanics = field.getGameMechanics();
             try {
                 if (packet.type == TroopGroupPacket.OperationType.CREATE) {
-                    field.createTroopGroup(playerData.controllerId, packet.name, troopIds);
+                    mechanics.createTroopGroup(playerData.controllerId, packet.name, troopIds, troopIds.first());
+                    System.out.println("Troop leader id: " + mechanics.getTroopGroup(playerData.controllerId, packet.name).getLeaderId());
                 } else if (packet.type == TroopGroupPacket.OperationType.ADD) {
-                    field.addTroopsToGroup(playerData.controllerId, packet.name, troopIds);
+                    mechanics.addTroopsToGroup(playerData.controllerId, packet.name, troopIds);
                 } else if (packet.type == TroopGroupPacket.OperationType.REMOVE) {
-                    field.removeTroopsFromGroup(playerData.controllerId, packet.name, troopIds);
+                    mechanics.removeTroopsFromGroup(playerData.controllerId, packet.name, troopIds);
                 } else if (packet.type == TroopGroupPacket.OperationType.DELETE) {
-                    field.deleteTroopGroup(playerData.controllerId, packet.name);
+                    mechanics.deleteTroopGroup(playerData.controllerId, packet.name);
                     playerData.troopGroups.remove(packet.name);
                 }
             } catch (Exception e) {

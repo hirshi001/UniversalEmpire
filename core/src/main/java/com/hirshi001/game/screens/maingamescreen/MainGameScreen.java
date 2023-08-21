@@ -20,9 +20,11 @@ import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.game.widgets.Styles;
 import com.hirshi001.networking.network.client.Client;
 import com.hirshi001.networking.packethandlercontext.PacketType;
+import com.hirshi001.restapi.RestAPI;
 
 public class MainGameScreen extends GameScreen {
 
+    public SettingsGUI settingsGui;
     public FieldRender fieldRender;
     public InputMultiplexer multiplexer;
     public Stage guiStage;
@@ -41,9 +43,8 @@ public class MainGameScreen extends GameScreen {
 
         ClientField field;
 
-        field = new ClientField(GameApp.client, GameSettings.CELL_SIZE, GameSettings.CHUNK_SIZE);
+        field = new ClientField(GameApp.client, GameSettings.CHUNK_SIZE);
         GameApp.field = field;
-
         fieldRender = new FieldRender(field);
         field.setFieldRender(fieldRender);
         GameApp.fieldRenderer = fieldRender;
@@ -60,6 +61,7 @@ public class MainGameScreen extends GameScreen {
         multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(guiStage = new Stage(new ScreenViewport()));
         multiplexer.addProcessor(fieldRender);
+
 
         Gdx.input.setInputProcessor(multiplexer);
 
@@ -84,15 +86,18 @@ public class MainGameScreen extends GameScreen {
     @Override
     public void render(float delta) {
         // send a ping packet every second
+
         time += delta;
         if (time > 1) {
             time = 0;
-            app.client.getChannel().sendWithResponse(new PingPacket(System.currentTimeMillis()), null, PacketType.TCP, 1000).then(ctx -> {
+            GameApp.client.getChannel().sendWithResponse(new PingPacket(System.currentTimeMillis()), null, PacketType.TCP, 1000).then(ctx -> {
                 long dt = System.currentTimeMillis() - ((PingPacket) ctx.packet).time;
                 float ping = dt / 1000f;
                 Gdx.app.log("MainGameScreen", "Ping: " + ping);
             }).performAsync();
         }
+
+
 
 
         {
@@ -113,13 +118,16 @@ public class MainGameScreen extends GameScreen {
             }
         }
 
+        guiStage.getViewport().apply();
         guiStage.act(delta);
         guiStage.draw();
-
     }
 
     public void addGameGUI(Actor gameGUI) {
         guiStage.addActor(gameGUI);
+
+        guiStage.setScrollFocus(gameGUI);
+        guiStage.setKeyboardFocus(gameGUI);
     }
 
     public boolean removeGameGUI(Actor gameGUI) {

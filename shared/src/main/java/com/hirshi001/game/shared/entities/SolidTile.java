@@ -1,33 +1,16 @@
 package com.hirshi001.game.shared.entities;
 
 import com.hirshi001.buffer.buffers.ByteBuffer;
+import com.hirshi001.game.shared.entities.tilepieces.TileGamePiece;
 
-public class SolidTile extends GamePiece {
+public class SolidTile extends TileGamePiece {
 
-    private int x, y;
 
     public SolidTile(){
 
     }
     public SolidTile(int x, int y) {
-        this.x = x;
-        this.y = y;
-        bounds.set(x, y, 1, 1);
-    }
-
-    @Override
-    public void writeBytes(ByteBuffer buffer) {
-        buffer.writeInt(getGameId());
-        buffer.writeInt(x);
-        buffer.writeInt(y);
-    }
-
-    @Override
-    public void readBytes(ByteBuffer buffer) {
-        setGameId(buffer.readInt());
-        x = buffer.readInt();
-        y = buffer.readInt();
-        bounds.set(x, y, 1, 1);
+        super(x, y, 1, 1);
     }
 
     @Override
@@ -38,11 +21,6 @@ public class SolidTile extends GamePiece {
     @Override
     public void readSyncBytes(ByteBuffer buffer) {
         // super.readSyncBytes(buffer);
-    }
-
-    @Override
-    public boolean isStatic() {
-        return true;
     }
 
 

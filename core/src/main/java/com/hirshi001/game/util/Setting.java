@@ -2,11 +2,13 @@ package com.hirshi001.game.util;
 
 public class Setting<T> {
 
+    public String name;
     public T value;
     private T currentValue;
     public SettingListener<T> listener;
 
-    public Setting(T initialValue, SettingListener<T> changeListener) {
+    public Setting(String name, T initialValue, SettingListener<T> changeListener) {
+        this.name = name;
         this.value = initialValue;
         this.currentValue = initialValue;
         this.listener = changeListener;
