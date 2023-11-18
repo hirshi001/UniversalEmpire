@@ -8,13 +8,14 @@ import com.hirshi001.game.shared.entities.Stone;
 import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.game.shared.util.HashedPoint;
+import java.security.SecureRandom;
 
 import java.util.*;
 
 public class ServerChunkLoader implements ChunkLoader {
 
     OpenSimplexNoise noise = new OpenSimplexNoise(0);
-    Random random = new Random();
+    Random random = new SecureRandom();
 
     Set<HashedPoint> loadedChunks = new HashSet<>();
     Map<HashedPoint, Array<GridPoint2>> resourcePoints = new HashMap<>();
