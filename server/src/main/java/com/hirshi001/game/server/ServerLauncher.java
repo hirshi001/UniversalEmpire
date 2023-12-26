@@ -253,25 +253,25 @@ public class ServerLauncher {
     private static void performCommand(String[] args) {
         if (args.length == 0) return;
         String command = args[0];
-        if (command.equalsIgnoreCase("exit")) {
+        if ("exit".equalsIgnoreCase(command)) {
             System.exit(0);
         }
-        if (command.equalsIgnoreCase("chunk")) {
+        if ("chunk".equalsIgnoreCase(command)) {
             chunkCommand(args);
         }
-        if (command.equalsIgnoreCase("spawn")) {
+        if ("spawn".equalsIgnoreCase(command)) {
             spawnCommand(args);
         }
-        if (command.equalsIgnoreCase("setProp")) {
+        if ("setProp".equalsIgnoreCase(command)) {
             setPropertyCommand(args);
         }
-        if(command.equalsIgnoreCase("remove")) {
+        if("remove".equalsIgnoreCase(command)) {
             removeCommand(args);
         }
-        if(command.equalsIgnoreCase("watchPacket")){
+        if("watchPacket".equalsIgnoreCase(command)){
             watchPacketCommand(args);
         }
-        if(command.equalsIgnoreCase("unwatchPacket")){
+        if("unwatchPacket".equalsIgnoreCase(command)){
             unwatchPacketCommand(args);
         }
     }
@@ -305,7 +305,7 @@ public class ServerLauncher {
         float y = Float.parseFloat(args[3]);
 
         GamePiece piece;
-        if (name.equals("TestGamePiece")) {
+        if ("TestGamePiece".equals(name)) {
             piece = new TestGamePiece();
             piece.getPosition().set(x, y);
         } else {
@@ -330,8 +330,8 @@ public class ServerLauncher {
         String value = valueBuilder.toString();
 
         Object v = null;
-        if (value.equals("true")) v = true;
-        else if (value.equals("false")) v = false;
+        if ("true".equals(value)) v = true;
+        else if ("false".equals(value)) v = false;
         else {
             try {
                 v = Integer.parseInt(value);
