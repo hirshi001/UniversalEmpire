@@ -28,6 +28,7 @@ dependencies {
 	implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
 	implementation "com.github.hirshi001:javanetworkinglibrary:$javaNetworkingVersion"
 	implementation "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
+	implementation "com.github.hirshi001:betterlogger:abc1763f95"
 
 	implementation project(':core')
 }

@@ -5,28 +5,14 @@ import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.registry.ID;
 import com.hirshi001.game.shared.tiles.Tile;
 
-public abstract class TileRenderer<T extends Tile> implements ID {
+public class TileRenderer {
 
-    private int id;
-    private T tile;
-
-    public TileRenderer(T tile) {
-        this.tile = tile;
+    public void render(SpriteBatch batch, Field field, int x, int y) {
+        Tile tile = field.getTile(x, y);
+        if (tile == null) {
+            return;
+        }
+        batch.draw(tile.texture, x, y, 1, 1);
     }
 
-    @Override
-    public int getID() {
-        return id;
-    }
-
-    @Override
-    public void setID(int id) {
-        this.id = id;
-    }
-
-    public T getTile() {
-        return tile;
-    }
-
-    public abstract void render(SpriteBatch batch, Field field, int x, int y);
 }

@@ -9,7 +9,6 @@ import com.hirshi001.game.ClientField;
 import com.hirshi001.game.GameApp;
 import com.hirshi001.game.render.ActorMap;
 import com.hirshi001.game.render.FieldRender;
-import com.hirshi001.game.render.tilerenderers.TileRenderers;
 import com.hirshi001.game.screens.ErrorScreen;
 import com.hirshi001.game.screens.GameScreen;
 import com.hirshi001.game.shared.entities.GamePieces;
@@ -20,7 +19,6 @@ import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.game.widgets.Styles;
 import com.hirshi001.networking.network.client.Client;
 import com.hirshi001.networking.packethandlercontext.PacketType;
-import com.hirshi001.restapi.RestAPI;
 
 public class MainGameScreen extends GameScreen {
 

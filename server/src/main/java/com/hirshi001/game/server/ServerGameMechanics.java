@@ -129,7 +129,6 @@ public class ServerGameMechanics extends GameMechanics {
                 final MoveTroopMovement movement = new MoveTroopMovement(destX, destY, 1F);
                 movement.findPath(finalTroop, threadLocal.get());
                 finalTroop.setMovement(movement);
-
             });
         }
 
@@ -151,8 +150,9 @@ public class ServerGameMechanics extends GameMechanics {
             troop = (Troop) field.getGamePiece(troopId);
             if (troop != null) {
                 Troop finalTroop1 = troop;
-                getField().getExec().runDeferred( ()-> {
+                getField().getExec().runDeferred(() -> {
                     final FollowLeaderMovement movement = new FollowLeaderMovement(troopGroup.getLeaderId());
+                    movement.findPath(finalTroop1, threadLocal.get());
                     finalTroop1.setMovement(movement);
                 });
             }

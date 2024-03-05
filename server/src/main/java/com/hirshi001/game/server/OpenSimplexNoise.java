@@ -4,6 +4,8 @@ package com.hirshi001.game.server;
  * (v1.0.1 With new gradient set and corresponding normalization factor, 9/19/14)
  */
 
+import com.badlogic.gdx.math.MathUtils;
+
 public class OpenSimplexNoise {
 
     private static final double STRETCH_CONSTANT_3D = -1.0 / 6;
@@ -609,7 +611,7 @@ public class OpenSimplexNoise {
         //Normalization constant tested using over 4 billion evaluations to bound range within [-1,1].
         //This is a safe upper bound. Actual min/max values found over the course of the 4 billion
         //evaluations were -28.12974224468639 (min) and 28.134269887817773 (max).
-        return value / 28.25;
+        return MathUtils.clamp(value / 28.135, -1.0, 1.0);
     }
 
     private double extrapolate(int xsb, int ysb, int zsb, double dx, double dy, double dz)

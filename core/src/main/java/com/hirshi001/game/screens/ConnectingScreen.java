@@ -1,6 +1,7 @@
 package com.hirshi001.game.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Net;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.hirshi001.game.GameApp;
@@ -19,6 +20,7 @@ import com.hirshi001.networking.packetregistrycontainer.PacketRegistryContainer;
 import com.hirshi001.networking.packetregistrycontainer.SinglePacketRegistryContainer;
 import com.hirshi001.restapi.RestFuture;
 
+import java.net.http.HttpClient;
 import java.util.concurrent.ExecutionException;
 
 public class ConnectingScreen extends GameScreen {
@@ -30,7 +32,31 @@ public class ConnectingScreen extends GameScreen {
     }
 
     public void connect(String ip, int port) {
-        Gdx.app.log("ConnectingScreen", "Connecting to" + ip + ":" + port);
+
+        /*
+        Net.HttpRequest httpRequest = new Net.HttpRequest(Net.HttpMethods.POST);
+        httpRequest.setUrl("http://localhost:8080/accounts/login");
+        httpRequest.setHeader("Content-Type", "application/x-www-form-urlencoded"); // Set the content type accordingly
+        httpRequest.setContent("username=hirshi001&password=hirshi001");
+        Gdx.net.sendHttpRequest(httpRequest, new Net.HttpResponseListener() {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
+                Gdx.app.log("Http Request Login", httpResponse.getResultAsString());
+                if (httpResponse.getStatus().getStatusCode() == 200) {
+                    // Login Success
+                    // other code
+                }
+            }
+            @Override
+            public void failed(Throwable t) { }
+            @Override
+            public void cancelled() {}
+        });
+
+         */
+
+
+        Gdx.app.log("Connecting Screen", "Connecting to " + ip + ":" + port);
         Client client;
         PacketRegistryContainer packetRegistryContainer = new SinglePacketRegistryContainer();
         packetRegistryContainer.getDefaultRegistry().registerDefaultPrimitivePackets()
@@ -50,7 +76,7 @@ public class ConnectingScreen extends GameScreen {
 
         NetworkData networkData = new DefaultNetworkData(Network.PACKET_ENCODER_DECODER, packetRegistryContainer);
         try {
-            Gdx.app.log("ConnectingScreen", "Creating client");
+            Gdx.app.log("Connecting Screen", "Creating client");
             GameApp.client = client = GameApp.networkFactory.createClient(networkData, GameApp.bufferFactory, ip, port);
             client.setChannelInitializer(channel -> {
                 // channel.setChannelOption(ChannelOption.TCP_AUTO_FLUSH, true);
@@ -65,17 +91,17 @@ public class ConnectingScreen extends GameScreen {
 
                 @Override
                 public void onTCPDisconnect(Channel channel) {
-                    System.out.println("Disconnected from server");
+                    Gdx.app.error("Client Listener", "Disconnected from server");
                 }
 
                 @Override
                 public void onChannelClose(Channel channel) {
-                    System.out.println("Channel closed");
+                    Gdx.app.error("Client Listener", "Channel closed");
                 }
 
                 @Override
                 public void onSent(PacketHandlerContext<?> context) {
-                    Gdx.app.log("Packet Sent", context.packet.getClass().getName());
+                    Gdx.app.log("Client Listener", "Packet Sent: " + context.packet.getClass().getName());
                 }
 
                 @Override
@@ -83,7 +109,7 @@ public class ConnectingScreen extends GameScreen {
                 }
             });
 
-            Gdx.app.log("ConnectingScreen", "About to connect server");
+            Gdx.app.log("Connecting Screen", "About to connect server");
             connectFuture = client.startTCP();
             connectFuture.perform();
         } catch (Exception e) {
@@ -97,9 +123,9 @@ public class ConnectingScreen extends GameScreen {
         ScreenUtils.clear(Color.RED);
         if (connectFuture.isSuccess()) {
             try {
-                Gdx.app.log("ConnectingScreen", "TCP Connected to server");
+                Gdx.app.log("Connecting Screen", "TCP Connected to server");
                 GameApp.client.startUDP().perform().get();
-                Gdx.app.log("ConnectingScreen", "UDP Connected to server");
+                Gdx.app.log("Connecting Screen", "UDP Connected to server");
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }

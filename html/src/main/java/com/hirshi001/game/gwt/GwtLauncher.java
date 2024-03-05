@@ -1,6 +1,7 @@
 package com.hirshi001.game.gwt;
 
 import com.badlogic.gdx.ApplicationListener;
+import com.badlogic.gdx.ApplicationLogger;
 import com.badlogic.gdx.backends.gwt.GwtApplication;
 import com.badlogic.gdx.backends.gwt.GwtApplicationConfiguration;
 import com.badlogic.gdx.graphics.g2d.freetype.gwt.FreetypeInjector;
@@ -8,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.gwt.inject.OnCompletion;
 import com.github.czyzby.websocket.GwtWebSockets;
 import com.hirshi001.buffer.bufferfactory.DefaultBufferFactory;
 import com.hirshi001.game.GameApp;
+import com.hirshi001.game.shared.settings.Network;
 import com.hirshi001.gwtnetworking.GWTChannel;
 import com.hirshi001.gwtnetworking.GWTNetworkingFactory;
 import com.hirshi001.gwtnetworking.SecureGWTNetworkingFactory;
@@ -32,7 +34,7 @@ public class GwtLauncher extends GwtApplication {
 		public ApplicationListener createApplicationListener () {
 			GwtWebSockets.initiate();
 			RestAPI.setFactory(new GWTRestFutureFactory());
-			return new GameApp(null, new DefaultBufferFactory(), new GWTNetworkingFactory(), "localhost", 443);
+			return new GameApp(null, new DefaultBufferFactory(), new SecureGWTNetworkingFactory(), "localhost", Network.WEBSOCKET_PORT);
 		}
 
 	@Override

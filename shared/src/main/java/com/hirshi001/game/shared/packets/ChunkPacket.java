@@ -8,7 +8,6 @@ import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.game.shared.util.HashedPoint;
-import com.hirshi001.game.shared.util.Point;
 import com.hirshi001.networking.packet.Packet;
 
 import java.util.Set;
@@ -75,7 +74,7 @@ public class ChunkPacket extends Packet {
             for (i = 0; i < chunk.getChunkSize(); i++) {
                 for (j = 0; j < chunk.getChunkSize(); j++) {
                     id = in.readInt();
-                    if (id != -1) chunk.setTile(i, j, Tiles.TILE_REGISTRY.get(id));
+                    if (id != -1) chunk.setTile(i, j, Tiles.getInstance().tileRegistry.get(id));
                 }
             }
 

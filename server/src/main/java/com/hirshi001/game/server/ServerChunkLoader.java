@@ -1,14 +1,19 @@
 package com.hirshi001.game.server;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Colors;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.OrderedMap;
 import com.hirshi001.game.shared.entities.Stone;
+import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.game.shared.util.HashedPoint;
 
+import java.awt.image.BufferedImage;
 import java.util.*;
 
 public class ServerChunkLoader implements ChunkLoader {
@@ -22,7 +27,6 @@ public class ServerChunkLoader implements ChunkLoader {
 
     public ServerChunkLoader(int chunkSize) {
         this.chunkSize = chunkSize;
-
 
         int radius = 1024;
         GridPoint2 center = new GridPoint2(radius, radius);
@@ -73,7 +77,17 @@ public class ServerChunkLoader implements ChunkLoader {
         int i, j;
         for (i = 0; i < chunkSize; i++) {
             for (j = 0; j < chunkSize; j++) {
-                tiles[i][j] = Tiles.GRASS;
+                int x = i + point.x * chunkSize;
+                int y = j + point.y * chunkSize;
+                double value = noise.eval(x / 100F, y / 100F, 0F);
+                int tileNum = (int)(value * 100);
+                Tile tile = Tiles.getInstance().tileRegistry.get(tileNum);
+                if(tile == null) {
+                    Pixmap pixmap = new Pixmap(GameSettings.TILE_TEXTURE_SIZE, GameSettings.TILE_TEXTURE_SIZE, Pixmap.Format.RGBA8888);
+                    tile = createNewTile(tileNum, pixmap);
+                    Tiles.getInstance().register(tile, pixmap);
+                    pixmap.dispose();
+                }
             }
         }
 
@@ -95,4 +109,18 @@ public class ServerChunkLoader implements ChunkLoader {
 
         return chunk;
     }
+
+    private Tile createNewTile(int tileNum, Pixmap pixmap) {
+        Tile tile = new Tile();
+        for(int i = 0; i < GameSettings.TILE_TEXTURE_SIZE; i++) {
+            for (int j = 0; j < GameSettings.TILE_TEXTURE_SIZE; j++) {
+                pixmap.setColor(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1);
+                pixmap.drawPixel(i, j);
+            }
+        }
+        Tiles.getInstance().register(tile, pixmap, tileNum);
+        return tile;
+    }
+
+
 }

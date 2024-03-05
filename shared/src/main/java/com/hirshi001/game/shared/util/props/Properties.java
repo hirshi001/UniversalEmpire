@@ -19,7 +19,7 @@ public class Properties implements ByteBufSerializable, Iterable<String> {
 
     protected Map<String, Object> properties = new HashMap<>(), localProperties = new HashMap<>();
 
-    protected List<String> modifiedProperties = new CopyOnWriteArrayList<>(), localModifiedProperties = new CopyOnWriteArrayList<>();
+    protected List<String> modifiedProperties = Collections.synchronizedList(new ArrayList<>()), localModifiedProperties = Collections.synchronizedList(new ArrayList<>());
 
     protected PropertiesManager manager;
 

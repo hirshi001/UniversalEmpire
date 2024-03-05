@@ -18,7 +18,7 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.hirshi001.game.ClientField;
 import com.hirshi001.game.GameApp;
-import com.hirshi001.game.render.tilerenderers.TileRenderers;
+import com.hirshi001.game.render.tilerenderers.TileRenderer;
 import com.hirshi001.game.screens.maingamescreen.SettingsGUI;
 import com.hirshi001.game.screens.maingamescreen.TroopSelectedGui;
 import com.hirshi001.game.shared.entities.GamePiece;
@@ -28,10 +28,6 @@ import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.util.Settings;
 import com.hirshi001.game.widgets.PropertiesTextArea;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
 
 public class FieldRender extends InputAdapter {
 
@@ -49,6 +45,8 @@ public class FieldRender extends InputAdapter {
 
     TroopSelectedGui selectionGUI;
     SettingsGUI settingsGUI;
+
+    TileRenderer tileRenderer = new TileRenderer();
 
     public FieldRender(Field field) {
         super();
@@ -155,14 +153,7 @@ public class FieldRender extends InputAdapter {
             if (tiles == null) continue;
             for (int x = 0; x < tiles.length; x++) {
                 for (int y = 0; y < tiles[x].length; y++) {
-
-                    // TileRenderers.DEFAULT.render(batch, field, x + dx, y + dy);
-                    // if (true) continue;
-                    if (tiles[x][y] != null) {
-                        TileRenderers.TILE_RENDERERS.get(tiles[x][y].getID()).render(batch, field, x + dx, y + dy);
-                    } else {
-                        TileRenderers.DEFAULT.render(batch, field, x + dx, y + dy);
-                    }
+                    tileRenderer.render(batch, field, x + dx, y + dy);
                 }
             }
         }

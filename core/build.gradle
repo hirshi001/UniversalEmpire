@@ -6,5 +6,6 @@ dependencies {
 	implementation "com.github.raeleus.TenPatch:tenpatch:$tenPatchVersion"
 	implementation "com.github.tommyettinger:textratypist:$textraTypistVersion"
 	implementation "com.github.raeleus.stripe:stripe:$stripWidgetsVersion"
+
 	api project(':shared')
 }

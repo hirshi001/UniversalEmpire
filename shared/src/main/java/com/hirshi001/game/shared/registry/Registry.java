@@ -6,6 +6,6 @@ public interface Registry<T extends ID> {
 
     T get(int id);
 
-
+    T remove(int id);
 
 }

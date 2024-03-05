@@ -1,6 +1,5 @@
 package com.hirshi001.game.render;
 
-import com.hirshi001.game.render.tilerenderers.SolidTileActor;
 import com.hirshi001.game.shared.entities.*;
 import com.hirshi001.game.shared.entities.troop.Knight;
 

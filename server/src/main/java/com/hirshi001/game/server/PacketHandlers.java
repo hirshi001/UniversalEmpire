@@ -23,7 +23,7 @@ public class PacketHandlers {
     public static void trackChunkHandle(PacketHandlerContext<TrackChunkPacket> ctx) {
         PlayerData playerData = (PlayerData) ctx.channel.getAttachment();
         HashedPoint point = new HashedPoint(ctx.packet.chunkX, ctx.packet.chunkY);
-        Field field = ServerLauncher.field;
+        Field field = ServerApplication.field;
 
         GameSettings.runnablePoster.postRunnable(() -> {
             Chunk chunk = field.getChunk(point);
@@ -43,7 +43,7 @@ public class PacketHandlers {
     }
 
     public static void joinGameHandle(PacketHandlerContext<JoinGamePacket> ctx) {
-        ServerField field = ServerLauncher.field;
+        ServerField field = ServerApplication.field;
 
         PlayerData playerData = new PlayerData();
         playerData.field = field;
@@ -56,7 +56,7 @@ public class PacketHandlers {
         ctx.channel.sendTCP(new GameInitPacket(playerData.controllerId).setResponsePacket(ctx.packet), null).perform();
 
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        for (int i = 0; i < 500; i++) {
+        for (int i = 0; i < 5; i++) {
             float x = random.nextFloat() * 10 - 5;
             float y = random.nextFloat() * 10 - 5;
             if (field.isWalkable((int) (Math.floor(x)), (int) Math.floor(y))) {
@@ -70,7 +70,7 @@ public class PacketHandlers {
     }
 
     public static void handleRequestPropertyNamePacket(PacketHandlerContext<RequestPropertyNamePacket> ctx) {
-        ServerField field = ServerLauncher.field;
+        ServerField field = ServerApplication.field;
         RequestPropertyNamePacket packet = ctx.packet;
         GamePiece piece = field.getGamePiece(packet.gamePieceId);
         if (piece == null) return;
@@ -81,7 +81,7 @@ public class PacketHandlers {
     }
 
     public static void handleTroopGroupPacket(PacketHandlerContext<TroopGroupPacket> ctx) {
-        ServerField field = ServerLauncher.field;
+        ServerField field = ServerApplication.field;
         TroopGroupPacket packet = ctx.packet;
         PlayerData playerData = (PlayerData) ctx.channel.getAttachment();
 

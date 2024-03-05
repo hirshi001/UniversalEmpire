@@ -37,4 +37,11 @@ public class DefaultRegistry<T extends ID> implements Registry<T> {
         return (T)items[id];
     }
 
+    @Override
+    public T remove(int id) {
+        T obj = (T)items[id];
+        items[id] = null;
+        return obj;
+    }
+
 }

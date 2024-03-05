@@ -50,7 +50,7 @@ public class GameResources {
             String aName = resourceMap.getString("atlas", null);
             if (aName != null) {
                 this.atlasName = dir + "/" + aName;
-                System.out.println("Loading atlas: " + this.atlasName);
+                Gdx.app.log("Game Resources","Loading atlas: " + this.atlasName);
                 assetManager.load(this.atlasName, TextureAtlas.class);
             }else this.atlasName = null;
         }

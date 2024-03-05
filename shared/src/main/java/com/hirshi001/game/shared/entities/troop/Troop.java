@@ -42,19 +42,16 @@ public abstract class Troop extends LivingEntity {
     @Override
     public void writeBytes(ByteBuffer buffer) {
         super.writeBytes(buffer);
-        buffer.writeFloat(time);
     }
 
     @Override
     public void readBytes(ByteBuffer buffer) {
         super.readBytes(buffer);
-        time = buffer.readFloat();
     }
 
     @Override
     public void writeSyncBytes(ByteBuffer buffer) {
         super.writeSyncBytes(buffer);
-        buffer.writeFloat(time);
         buffer.writeBoolean(getMovement()!=null);
         if(getMovement()!=null) {
             getMovement().writeSyncBytes(buffer);
@@ -64,7 +61,6 @@ public abstract class Troop extends LivingEntity {
     @Override
     public void readSyncBytes(ByteBuffer buffer) {
         super.readSyncBytes(buffer);
-        time = buffer.readFloat();
         if(buffer.readBoolean() && getMovement()!=null) {
             getMovement().readSyncBytes(buffer);
         }
@@ -72,33 +68,14 @@ public abstract class Troop extends LivingEntity {
 
     @Override
     public boolean needsSync() {
-        return true;
+        return false;
     }
 
     protected void move(float delta) {
-        time += delta;
-
-
         Movement movement = getMovement();
         if (movement != null) {
             if (movement.applyMovement(this, delta) && field.isServer()) {
                 setMovement(null);
-            }
-            return;
-        }
-        if(getGroup() != null) {
-            Troop troop = (Troop) field.getGamePiece(getGroup().getLeaderId());
-            if(time>5F) {
-                time = 0F;
-                if(troop!=null) {
-                    targetPosition.set(troop.getPosition());
-                }
-            }
-
-
-            if(troop!=null) {
-                Vector2 deltaPos = targetPosition.cpy().sub(getPosition()).setLength(getSpeed() * delta);
-                field.moveGamePieceShort(this, getX() + deltaPos.x, getY() + deltaPos.y);
             }
         }
     }

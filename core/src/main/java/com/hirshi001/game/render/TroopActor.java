@@ -37,7 +37,7 @@ public abstract class TroopActor<T extends Troop> extends GamePieceActor<T>{
         }else{
             renderer.setColor(Color.BLUE);
         }
-        renderer.circle(gamePiece.getX(), gamePiece.getY(), 0.1F, 10);
+        // renderer.circle(gamePiece.getX(), gamePiece.getY(), 0.1F, 10);
 
         Movement movement = gamePiece.getMovement();
         if(movement instanceof MoveTroopMovement){

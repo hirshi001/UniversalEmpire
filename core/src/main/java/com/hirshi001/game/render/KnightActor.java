@@ -55,6 +55,7 @@ public class KnightActor extends TroopActor<Knight> {
         time += delta * MathUtils.random(0.9F, 1.1F);
         TextureRegion region = getAnimation().getKeyFrame(time);
 
+        facingLeft = false;
         if (region != null) {
             float size = 1F;
             float halfSize = size / 2F;

@@ -8,6 +8,15 @@ import com.hirshi001.buffer.buffers.ByteBuffer;
 
 public class ByteBufferUtil {
 
+    public static void writeRange(ByteBuffer out, Range range) {
+        out.writeFloat(range.min);
+        out.writeFloat(range.max);
+    }
+
+    public static Range readRange(ByteBuffer in) {
+        return new Range(in.readFloat(), in.readFloat());
+    }
+
     public static void writeRectangle(ByteBuffer out, Rectangle rectangle) {
         out.writeFloat(rectangle.x);
         out.writeFloat(rectangle.y);

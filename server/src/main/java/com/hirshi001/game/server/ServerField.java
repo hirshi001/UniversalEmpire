@@ -140,6 +140,7 @@ public class ServerField extends Field {
             if (piecesToSync > 0) {
                 gamePiece.syncedRecently = false;
             }
+
             ServerChunk chunk = (ServerChunk) gamePiece.chunk;
             Properties properties = gamePiece.getProperties();
             List<String> modified = properties.getModifiedProperties();
