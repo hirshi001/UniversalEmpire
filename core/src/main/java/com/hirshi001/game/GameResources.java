@@ -161,16 +161,16 @@ public class GameResources {
     }
 
     private Class<?> getClass(String name) throws ReflectionException {
-        if (name.equals("com.badlogic.gdx.graphics.Texture")) {
+        if ("com.badlogic.gdx.graphics.Texture".equals(name)) {
             return Texture.class;
         }
-        if (name.equals("com.badlogic.gdx.audio.Music")) {
+        if ("com.badlogic.gdx.audio.Music".equals(name)) {
             return Music.class;
         }
-        if (name.equals("com.badlogic.gdx.audio.Sound")) {
+        if ("com.badlogic.gdx.audio.Sound".equals(name)) {
             return Sound.class;
         }
-        if (name.equals("com.badlogic.gdx.graphics.g2d.BitmapFont")) {
+        if ("com.badlogic.gdx.graphics.g2d.BitmapFont".equals(name)) {
             return BitmapFont.class;
         }
         return ClassReflection.forName(name);
