@@ -2,6 +2,7 @@ package com.hirshi001.game.shared.util.serializer;
 
 import com.badlogic.gdx.ai.steer.utils.paths.LinePath;
 import com.badlogic.gdx.math.Vector2;
+import com.hirshi001.betternetworkingutil.ByteBufSerializer;
 import com.hirshi001.buffer.buffers.ByteBuffer;
 import com.hirshi001.buffer.util.ByteBufUtil;
 import com.hirshi001.game.shared.util.ByteBufferUtil;

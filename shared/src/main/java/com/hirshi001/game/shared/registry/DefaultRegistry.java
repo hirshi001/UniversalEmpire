@@ -1,5 +1,7 @@
 package com.hirshi001.game.shared.registry;
 
+import java.util.Collection;
+
 public class DefaultRegistry<T extends ID> implements Registry<T> {
 
     private Object[] items;
@@ -42,6 +44,17 @@ public class DefaultRegistry<T extends ID> implements Registry<T> {
         T obj = (T)items[id];
         items[id] = null;
         return obj;
+    }
+
+    @Override
+    public void get(Collection<T> collection) {
+        // synchronized (lock) {
+            for (Object item : items) {
+                if (item != null) {
+                    collection.add((T)item);
+                }
+            }
+        // }
     }
 
 }

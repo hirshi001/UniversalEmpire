@@ -46,6 +46,8 @@ public class SettingsGUI extends ScrollPane {
             }
             else if(setting instanceof KeybindSetting) {
                 addKeybind(table, (KeybindSetting) setting);
+            }else if(setting instanceof BooleanSetting) {
+                addBoolean(table, (BooleanSetting) setting);
             }
             table.row();
         }
@@ -119,6 +121,18 @@ public class SettingsGUI extends ScrollPane {
 
         table.add(button).uniformX().growX().maxWidth(Value.percentWidth(0.25F, table));
 
+    }
+
+    public void addBoolean(Table table, BooleanSetting setting){
+        CheckBox checkBox = new CheckBox("", GameApp.guiSkin);
+        checkBox.setChecked(setting.value);
+        checkBox.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                setting.change(checkBox.isChecked());
+            }
+        });
+        table.add(checkBox).uniformX().fillX();
     }
 
 

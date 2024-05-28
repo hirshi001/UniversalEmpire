@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.IntSet;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.hirshi001.game.ClientField;
@@ -26,8 +27,12 @@ import com.hirshi001.game.shared.entities.troop.Troop;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.tiles.Tile;
+import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.game.util.Settings;
 import com.hirshi001.game.widgets.PropertiesTextArea;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class FieldRender extends InputAdapter {
 
@@ -139,11 +144,35 @@ public class FieldRender extends InputAdapter {
         stage.getViewport().apply();
 
         stage.draw();
+    }
 
+    private void updateTileRegions() {
 
+        Set<Integer> tilesToUpdate = new HashSet<>();
+        Tile[][] tiles;
+        int dx, dy;
+        for (Chunk chunk : field.getChunks()) {
+            tiles = chunk.getTiles();
+            if (tiles == null) continue;
+            for (int x = 0; x < tiles.length; x++) {
+                for (int y = 0; y < tiles[x].length; y++) {
+                    tilesToUpdate.add(tiles[x][y].getID());
+                }
+            }
+        }
+
+        for (int tileId : tilesToUpdate) {
+            Tile tile = Tiles.getInstance().tileRegistry.get(tileId);
+            tile.texture = Tiles.getInstance().getTileTexture().getRegion(tile.getID());
+        }
     }
 
     private void drawTiles(float delta) {
+        if(Tiles.getInstance().getTileTexture().dirty()) {
+            System.out.println("Updating tile regions");
+            updateTileRegions();
+        }
+        updateTileRegions();
         Tile[][] tiles;
         int dx, dy;
         for (Chunk chunk : field.getChunks()) {

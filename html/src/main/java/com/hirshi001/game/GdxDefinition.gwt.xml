@@ -14,12 +14,12 @@
 	<inherits name="com.hirshi001.game.GameApp" />
     <inherits name="com.hirshi001.game.shared.shared" />
 
-
     <inherits name="com.hirshi001.networking.NetworkingLibrary" />
     <inherits name="com.hirshi001.gwtrestapi.gwtrestapi" />
     <inherits name="com.hirshi001.restapi.restapi" />
     <inherits name="com.hirshi001.gwtnetworking.gwtnetworking" />
     <inherits name="com.hirshi001.buffer.buffer" />
+    <inherits name="com.hirshi001.betternetworkingutil.BetterNetworkingUtil" />
 
     <inherits name="com.google.gwt.user.User" />
     <inherits name="com.google.gwt.core.Core" />

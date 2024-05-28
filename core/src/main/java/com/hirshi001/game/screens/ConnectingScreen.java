@@ -1,7 +1,6 @@
 package com.hirshi001.game.screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Net;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.hirshi001.game.GameApp;
@@ -13,6 +12,7 @@ import com.hirshi001.networking.network.channel.AbstractChannelListener;
 import com.hirshi001.networking.network.channel.Channel;
 import com.hirshi001.networking.network.channel.ChannelOption;
 import com.hirshi001.networking.network.client.Client;
+import com.hirshi001.networking.network.networkcondition.NetworkCondition;
 import com.hirshi001.networking.networkdata.DefaultNetworkData;
 import com.hirshi001.networking.networkdata.NetworkData;
 import com.hirshi001.networking.packethandlercontext.PacketHandlerContext;
@@ -20,7 +20,6 @@ import com.hirshi001.networking.packetregistrycontainer.PacketRegistryContainer;
 import com.hirshi001.networking.packetregistrycontainer.SinglePacketRegistryContainer;
 import com.hirshi001.restapi.RestFuture;
 
-import java.net.http.HttpClient;
 import java.util.concurrent.ExecutionException;
 
 public class ConnectingScreen extends GameScreen {
@@ -59,7 +58,10 @@ public class ConnectingScreen extends GameScreen {
         Gdx.app.log("Connecting Screen", "Connecting to " + ip + ":" + port);
         Client client;
         PacketRegistryContainer packetRegistryContainer = new SinglePacketRegistryContainer();
-        packetRegistryContainer.getDefaultRegistry().registerDefaultPrimitivePackets()
+
+        packetRegistryContainer.getDefaultRegistry()
+                .registerDefaultPrimitivePackets()
+                .registerNetworkConditionPackets()
                 .register(TrackChunkPacket::new, null, TrackChunkPacket.class, 0)
                 .register(ChunkPacket::new, PacketHandlers::handleChunkPacket, ChunkPacket.class, 1)
                 .register(JoinGamePacket::new, null, JoinGamePacket.class, 2)
@@ -72,7 +74,10 @@ public class ConnectingScreen extends GameScreen {
                 .register(PropertyNamePacket::new, PacketHandlers::handlePropertyNamePacket, PropertyNamePacket.class, 9)
                 .register(MaintainConnectionPacket::new, null, MaintainConnectionPacket.class, 10)
                 .register(PingPacket::new, null, PingPacket.class, 11)
-                .register(TroopGroupPacket::new, PacketHandlers::handleTroopGroupPacket, TroopGroupPacket.class, 12);
+                .register(TroopGroupPacket::new, PacketHandlers::handleTroopGroupPacket, TroopGroupPacket.class, 12)
+                .register(RequestTilePacket::new, null, RequestTilePacket.class, 13)
+                .register(TilePacket::new, null, TilePacket.class, 14);
+
 
         NetworkData networkData = new DefaultNetworkData(Network.PACKET_ENCODER_DECODER, packetRegistryContainer);
         try {

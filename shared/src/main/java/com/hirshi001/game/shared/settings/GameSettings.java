@@ -2,6 +2,7 @@ package com.hirshi001.game.shared.settings;
 
 import com.badlogic.gdx.ai.steer.utils.paths.LinePath;
 import com.badlogic.gdx.math.Vector2;
+import com.hirshi001.betternetworkingutil.ByteBufSerializer;
 import com.hirshi001.buffer.bufferfactory.BufferFactory;
 import com.hirshi001.game.shared.control.AttackTroopMovement;
 import com.hirshi001.game.shared.control.FollowLeaderMovement;

@@ -1,19 +1,11 @@
 package com.hirshi001.game.shared.entities.troop;
 
-import com.badlogic.gdx.ai.utils.Location;
-import com.badlogic.gdx.math.Vector;
 import com.badlogic.gdx.math.Vector2;
-import com.dongbat.jbump.CollisionFilter;
-import com.dongbat.jbump.Response;
 import com.hirshi001.buffer.buffers.ByteBuffer;
 import com.hirshi001.game.shared.control.Movement;
 import com.hirshi001.game.shared.control.TroopGroup;
-import com.hirshi001.game.shared.entities.Entity;
-import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.entities.LivingEntity;
 import com.hirshi001.game.shared.game.Field;
-import com.hirshi001.game.shared.game.PlayerData;
-import com.hirshi001.game.shared.settings.GameSettings;
 
 public abstract class Troop extends LivingEntity {
 

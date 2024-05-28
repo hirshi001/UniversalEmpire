@@ -1,8 +1,17 @@
 eclipse.project.name = appName + '-shared'
 
 dependencies {
+    annotationProcessor "com.github.hirshi001:betternetworkingutil:$betterNetworkingUtilVersion"
+    api "com.github.hirshi001:betternetworkingutil:$betterNetworkingUtilVersion"
+
     api "com.github.hirshi001:betternetworking:$betterNetworkingVersion"
     api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
     api "com.github.tommyettinger:jbump:$jbumpVersion"
     api "com.badlogicgames.gdx:gdx:$gdxVersion"
+}
+
+tasks.withType(JavaCompile) {
+    doFirst {
+        println "AnnotationProcessorPath for $name is ${options.getAnnotationProcessorPath().getFiles()}"
+    }
 }

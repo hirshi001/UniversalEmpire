@@ -1,9 +1,7 @@
 package com.hirshi001.game.server;
 
 import com.badlogic.gdx.utils.Array;
-import com.hirshi001.game.shared.control.TroopGroup;
 import com.hirshi001.game.shared.entities.troop.Knight;
-import com.hirshi001.game.shared.entities.troop.Troop;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.entities.GamePiece;
@@ -11,10 +9,12 @@ import com.hirshi001.game.shared.game.GameMechanics;
 import com.hirshi001.game.shared.game.PlayerData;
 import com.hirshi001.game.shared.packets.*;
 import com.hirshi001.game.shared.settings.GameSettings;
+import com.hirshi001.game.shared.tiles.Tile;
+import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.props.Properties;
 import com.hirshi001.networking.packethandlercontext.PacketHandlerContext;
-import com.hirshi001.networking.packethandlercontext.PacketType;
+import com.hirshi001.networking.util.defaultpackets.primitivepackets.BooleanPacket;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -116,5 +116,16 @@ public class PacketHandlers {
 
     }
 
+    public static void handleRequestTileTexture(PacketHandlerContext<RequestTilePacket> ctx) {
+        RequestTilePacket packet = ctx.packet;
+        Tile tile = Tiles.getInstance().tileRegistry.get(packet.id);
+        if(tile == null) {
+            ctx.channel.sendTCP(new BooleanPacket(false).setResponsePacket(packet), null).perform();
+            return;
+        }
 
+        byte[] bytes = Tiles.getInstance().getTileTexture().getBytes(packet.id);
+        ctx.channel.sendTCP(new TilePacket(tile, bytes).setResponsePacket(packet), null)
+                .perform();
+    }
 }

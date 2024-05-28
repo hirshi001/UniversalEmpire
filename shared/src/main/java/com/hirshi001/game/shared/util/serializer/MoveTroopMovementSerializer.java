@@ -1,10 +1,9 @@
 package com.hirshi001.game.shared.util.serializer;
 
 import com.dongbat.jbump.IntPoint;
+import com.hirshi001.betternetworkingutil.ByteBufSerializer;
 import com.hirshi001.buffer.buffers.ByteBuffer;
 import com.hirshi001.game.shared.control.MoveTroopMovement;
-import com.hirshi001.game.shared.game.SearchNode;
-
 import java.util.LinkedList;
 
 public class MoveTroopMovementSerializer implements ByteBufSerializer<MoveTroopMovement> {

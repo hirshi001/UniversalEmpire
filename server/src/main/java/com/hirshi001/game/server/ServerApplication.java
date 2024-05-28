@@ -4,14 +4,10 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.hirshi001.buffer.bufferfactory.BufferFactory;
 import com.hirshi001.buffer.bufferfactory.DefaultBufferFactory;
-import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.entities.GamePieces;
-import com.hirshi001.game.shared.entities.TestGamePiece;
-import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.packets.*;
 import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.settings.Network;
-import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.javanetworking.JavaNetworkFactory;
 import com.hirshi001.javarestapi.JavaRestFutureFactory;
@@ -27,6 +23,7 @@ import com.hirshi001.networking.networkdata.NetworkData;
 import com.hirshi001.networking.packethandlercontext.PacketHandlerContext;
 import com.hirshi001.networking.packetregistrycontainer.PacketRegistryContainer;
 import com.hirshi001.networking.packetregistrycontainer.SinglePacketRegistryContainer;
+import com.hirshi001.networking.util.defaultpackets.systempackets.NetworkConditionPackets;
 import com.hirshi001.restapi.RestAPI;
 import com.hirshi001.websocketnetworkingserver.WebsocketServer;
 import logger.ConsoleColors;
@@ -41,7 +38,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.security.KeyStore;
-import java.util.*;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -84,7 +81,6 @@ public class ServerApplication extends ApplicationAdapter {
         System.out.println("Starting server...");
 
 
-
         RestAPI.setFactory(new JavaRestFutureFactory());
         executorService = Executors.newScheduledThreadPool(3);
         networkFactory = new JavaNetworkFactory(executorService);
@@ -101,13 +97,15 @@ public class ServerApplication extends ApplicationAdapter {
     public void startServer(int websocketPort, int javaPort) throws IOException, ExecutionException, InterruptedException {
 
         GamePieces.register();
-        Tiles.setInstance(new Tiles(GameSettings.TILE_TEXTURE_SIZE));
+        Tiles.setInstance(new Tiles(GameSettings.TILE_TEXTURE_SIZE, false));
         GameSettings.runnablePoster = Gdx.app::postRunnable;
         GameSettings.registerSerializers();
 
 
         PacketRegistryContainer registryContainer = new SinglePacketRegistryContainer();
-        registryContainer.getDefaultRegistry().registerDefaultPrimitivePackets()
+        registryContainer.getDefaultRegistry()
+                .registerNetworkConditionPackets()
+                .registerDefaultPrimitivePackets()
                 .register(TrackChunkPacket::new, PacketHandlers::trackChunkHandle, TrackChunkPacket.class, 0)
                 .register(ChunkPacket::new, null, ChunkPacket.class, 1)
                 .register(JoinGamePacket::new, PacketHandlers::joinGameHandle, JoinGamePacket.class, 2)
@@ -120,7 +118,9 @@ public class ServerApplication extends ApplicationAdapter {
                 .register(PropertyNamePacket::new, null, PropertyNamePacket.class, 9)
                 .register(MaintainConnectionPacket::new, null, MaintainConnectionPacket.class, 10)
                 .register(PingPacket::new, (ctx) -> ctx.channel.sendNow(ctx.packet.setResponsePacket(ctx.packet), null, ctx.packetType), PingPacket.class, 11)
-                .register(TroopGroupPacket::new, PacketHandlers::handleTroopGroupPacket, TroopGroupPacket.class, 12);
+                .register(TroopGroupPacket::new, PacketHandlers::handleTroopGroupPacket, TroopGroupPacket.class, 12)
+                .register(RequestTilePacket::new, PacketHandlers::handleRequestTileTexture, RequestTilePacket.class, 13)
+                .register(TilePacket::new, null, TilePacket.class, 14);
 
         NetworkData networkData = new DefaultNetworkData(Network.PACKET_ENCODER_DECODER, registryContainer);
         ChannelInitializer channelInitializer = channel -> {
@@ -145,6 +145,12 @@ public class ServerApplication extends ApplicationAdapter {
             public void onReceived(PacketHandlerContext<?> context) {
                 if (commandHandler.watchedPackets.contains(context.packet.getClass())) {
                     System.out.println("Received packet: " + context.packet + " from " + Arrays.toString(context.channel.getAddress()) + " on " + context.packetType);
+                }
+                if(context.packet instanceof NetworkConditionPackets.EnableNetworkConditionPacket) {
+                    System.out.println("Enabling Network Condition: " + ((NetworkConditionPackets.EnableNetworkConditionPacket) context.packet).value);
+                }
+                if(context.packet instanceof NetworkConditionPackets.LatencyPacket) {
+                    System.out.println("Setting Latency: " + ((NetworkConditionPackets.LatencyPacket) context.packet).value);
                 }
             }
 
@@ -180,13 +186,17 @@ public class ServerApplication extends ApplicationAdapter {
             }
         }
         field.tick(1F);
+        System.out.println("Initialized Field");
+
+
 
         commandHandler = new CommandHandler(field);
         new Thread(commandHandler).start();
+        System.out.println("Command Handler Started");
     }
 
     private void setSSL(WebsocketServer websocketServer) {
-        if(keystorePassword == null) {
+        if (keystorePassword == null) {
             System.out.println("No keystore password provided, not setting SSL");
             return;
         }
@@ -233,5 +243,19 @@ public class ServerApplication extends ApplicationAdapter {
     @Override
     public void dispose() {
         super.dispose();
+        try {
+            javaServer.close().perform().get();
+            websocketServer.close().perform().get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
+            e.printStackTrace();
+        }
     }
 }

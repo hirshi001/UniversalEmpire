@@ -12,6 +12,7 @@ buildscript {
 	}
 	dependencies {
 
+
 		classpath group: 'org.mini2Dx', name: 'butler', version: '2.1.0'
 		classpath "org.wisepersist:gwt-gradle-plugin:$gwtPluginVersion"
 		classpath "com.badlogicgames.gdx:gdx-tools:$gdxVersion"
@@ -51,11 +52,12 @@ task texturePacker {
 allprojects {
 	apply plugin: 'eclipse'
 	apply plugin: 'idea'
+
 }
 
 configure(subprojects) {
 	apply plugin: 'java-library'
-	sourceCompatibility = 8
+	sourceCompatibility = 15
 	compileJava {
 		options.incremental = true
 	}
@@ -86,6 +88,7 @@ subprojects {
 		maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
 		maven { url 'https://jitpack.io' }
 	}
+
 }
 
 project(":html") {

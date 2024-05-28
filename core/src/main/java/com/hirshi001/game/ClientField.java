@@ -1,52 +1,63 @@
 package com.hirshi001.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.ai.fma.FormationPattern;
+import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
 import com.hirshi001.game.render.ActorMap;
 import com.hirshi001.game.render.FieldRender;
-import com.hirshi001.game.shared.control.TroopGroup;
+import com.hirshi001.game.requesters.ChunkRequester;
+import com.hirshi001.game.requesters.TileRequester;
 import com.hirshi001.game.shared.game.Chunk;
 import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.game.PlayerData;
-import com.hirshi001.game.shared.packets.MaintainConnectionPacket;
-import com.hirshi001.game.shared.packets.TrackChunkPacket;
-import com.hirshi001.game.shared.packets.TroopGroupPacket;
+import com.hirshi001.game.shared.packets.*;
+import com.hirshi001.game.shared.tiles.Tile;
+import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.game.shared.util.HashedPoint;
 import com.hirshi001.game.shared.util.Point;
 import com.hirshi001.networking.network.client.Client;
 import com.hirshi001.networking.packethandlercontext.PacketType;
+import com.hirshi001.networking.util.defaultpackets.arraypackets.ByteArrayPacket;
+import com.hirshi001.networking.util.defaultpackets.primitivepackets.BooleanPacket;
 import com.hirshi001.restapi.RestAPI;
-import com.hirshi001.restapi.ScheduledExec;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class ClientField extends Field {
 
     public final Client client;
     public final PlayerData playerData = new PlayerData();
-    private final Map<Point, Long> chunkLastRequested = new HashMap<>();
-    private final Map<Chunk, Float> chunkLife = new HashMap<>();
-
-    private final Vector2 position = new Vector2();
-    public FieldRender fieldRender;
-
-    public int chunkLoadRadius = 2;
-
-    public Vector2 getPosition() {
-        return position;
-    }
-
     public int getControllerId() {
         return playerData.controllerId;
     }
 
+    // For requesting data from the server
+    public final ChunkRequester chunkRequester;
+    public final TileRequester tileRequester;
+
+    // Handling Chunk loading
+    public int chunkLoadRadius = 2;
+    private final Map<Chunk, Float> chunkLife = new HashMap<>();
+
+    // Position of the camera, used for loading chunks
+    private final Vector2 position = new Vector2();
+    public Vector2 getPosition() {
+        return position;
+    }
+
+    // Field Render, needed for updating render maps when entity is added to field
+    public FieldRender fieldRender;
+
     public ClientField(Client client, int chunkSize) {
         super(chunkSize, new ClientGameMechanics(), RestAPI.getDefaultExecutor());
+        chunkRequester = new ChunkRequester(client.getChannel());
+        tileRequester = new TileRequester(client.getChannel());
         this.client = client;
     }
 
@@ -65,28 +76,14 @@ public class ClientField extends Field {
         if (containsChunk(x, y)) {
             return getChunk(x, y);
         }
-
-        HashedPoint point = new HashedPoint(x, y);
-        int chunkRequestTime = 1;
-        if (chunkLastRequested.containsKey(point)) {
-            long lastRequestTime = chunkLastRequested.get(point);
-            if (System.nanoTime() - lastRequestTime < TimeUnit.SECONDS.toNanos(chunkRequestTime)) {
-                return null;
-            }
-        }
-        chunkLastRequested.put(new HashedPoint(point.x, point.y), System.nanoTime());
-        try {
-            client.getChannel().sendDeferred(new TrackChunkPacket(point.x, point.y), null, PacketType.TCP);
-        }catch (Exception e){
-            Gdx.app.getApplicationLogger().error("TrackChunkPacket", "Error sending TrackChunkPacket", e);
-        }
+        chunkRequester.addRequest(x, y);
         return null;
     }
 
     @Override
     public Chunk addChunk(Chunk chunk) {
         if (chunk == null) return null;
-        chunkLastRequested.remove(chunk.chunkPosition);
+        chunkRequester.removeRequest(chunk.getChunkX(), chunk.getChunkY());
         return super.addChunk(chunk);
     }
 
@@ -95,10 +92,12 @@ public class ClientField extends Field {
         if (client.isOpen()) {
             // maintainConnection();
         }
-
         handleChunkLoading(delta);
+        checkTilesToRemove();
         super.tick(delta);
     }
+
+
 
     MaintainConnectionPacket maintainConnectionPacket = new MaintainConnectionPacket();
     protected void maintainConnection() {
@@ -136,6 +135,26 @@ public class ClientField extends Field {
         });
     }
 
+    // removes tile textures which are not in use, and queues the texture to local file saving
+    protected void checkTilesToRemove() {
+        Tiles instance = Tiles.getInstance();
+        Set<Tile> toRemove = new HashSet<>();
+        instance.tileRegistry.get(toRemove);
+        for(Chunk chunk : chunks.values()) {
+            for(int i = 0; i < chunk.getChunkSize(); i++) {
+                for(int j = 0; j < chunk.getChunkSize(); j++) {
+                    Tile tile = chunk.getTile(i, j);
+                    if(tile == null) continue;
+                    toRemove.remove(tile);
+                }
+            }
+        }
+
+        for(Tile tile : toRemove) {
+        //    instance.tileRegistry.remove(tile.getID());
+        }
+    }
+
     @Override
     public boolean isServer() {
         return false;
@@ -145,8 +164,11 @@ public class ClientField extends Field {
     @Override
     public boolean removeChunk(Point chunk) {
         client.getChannel().sendDeferred(new TrackChunkPacket(chunk.x, chunk.y, true), null, PacketType.TCP);
-        chunkLastRequested.remove(chunk);
+        chunkRequester.removeRequest(chunk.x, chunk.y);
         return super.removeChunk(chunk);
+    }
 
+    public void requestTileTexture(final int id) {
+        tileRequester.addRequest(id);
     }
 }

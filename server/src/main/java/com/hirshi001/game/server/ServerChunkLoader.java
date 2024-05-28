@@ -1,7 +1,6 @@
 package com.hirshi001.game.server;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Colors;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.MathUtils;
@@ -13,7 +12,6 @@ import com.hirshi001.game.shared.tiles.Tile;
 import com.hirshi001.game.shared.tiles.Tiles;
 import com.hirshi001.game.shared.util.HashedPoint;
 
-import java.awt.image.BufferedImage;
 import java.util.*;
 
 public class ServerChunkLoader implements ChunkLoader {
@@ -24,6 +22,8 @@ public class ServerChunkLoader implements ChunkLoader {
     Set<HashedPoint> loadedChunks = new HashSet<>();
     Map<HashedPoint, Array<GridPoint2>> resourcePoints = new HashMap<>();
     private final int chunkSize;
+
+    Color[] colors = new Color[] {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.PURPLE, Color.ORANGE, Color.CYAN, Color.MAGENTA, Color.PINK, Color.LIME, Color.LIGHT_GRAY, Color.DARK_GRAY, Color.GRAY, Color.WHITE, Color.BLACK};
 
     public ServerChunkLoader(int chunkSize) {
         this.chunkSize = chunkSize;
@@ -79,15 +79,15 @@ public class ServerChunkLoader implements ChunkLoader {
             for (j = 0; j < chunkSize; j++) {
                 int x = i + point.x * chunkSize;
                 int y = j + point.y * chunkSize;
-                double value = noise.eval(x / 100F, y / 100F, 0F);
+                double value = (noise.eval(x / 100F, y / 100F, 0F) + 1)/ 2F; // Gives a value from 0 to 1
                 int tileNum = (int)(value * 100);
                 Tile tile = Tiles.getInstance().tileRegistry.get(tileNum);
                 if(tile == null) {
                     Pixmap pixmap = new Pixmap(GameSettings.TILE_TEXTURE_SIZE, GameSettings.TILE_TEXTURE_SIZE, Pixmap.Format.RGBA8888);
                     tile = createNewTile(tileNum, pixmap);
-                    Tiles.getInstance().register(tile, pixmap);
                     pixmap.dispose();
                 }
+                tiles[i][j] = tile;
             }
         }
 
@@ -112,13 +112,19 @@ public class ServerChunkLoader implements ChunkLoader {
 
     private Tile createNewTile(int tileNum, Pixmap pixmap) {
         Tile tile = new Tile();
+        Color baseColor = colors[MathUtils.random(colors.length - 1)];
+        Color offsetColor = new Color();
+        final float lowerMultiplier = 0.9F, upperMultiplier = 1.1F;
         for(int i = 0; i < GameSettings.TILE_TEXTURE_SIZE; i++) {
-            for (int j = 0; j < GameSettings.TILE_TEXTURE_SIZE; j++) {
-                pixmap.setColor(MathUtils.random(), MathUtils.random(), MathUtils.random(), 1);
+            for(int j = 0; j < GameSettings.TILE_TEXTURE_SIZE; j++) {
+                offsetColor.set(baseColor);
+                offsetColor.mul(MathUtils.random(lowerMultiplier, upperMultiplier), MathUtils.random(lowerMultiplier, upperMultiplier), MathUtils.random(lowerMultiplier, upperMultiplier), 1);
+                pixmap.setColor(offsetColor);
                 pixmap.drawPixel(i, j);
             }
         }
         Tiles.getInstance().register(tile, pixmap, tileNum);
+        System.out.println("Registered new tile: " + tileNum);
         return tile;
     }
 

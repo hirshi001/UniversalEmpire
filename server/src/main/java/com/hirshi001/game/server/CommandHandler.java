@@ -7,6 +7,7 @@ import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.settings.GameSettings;
 import com.hirshi001.game.shared.tiles.Tile;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -172,8 +173,16 @@ public class CommandHandler implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("CommandHandler running");
         Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
+        while (true) {
+            while(!scanner.hasNextLine()) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             String line = scanner.nextLine();
             String[] args = line.split(" ");
             try {
@@ -182,6 +191,7 @@ public class CommandHandler implements Runnable {
                 e.printStackTrace();
             }
         }
+        // System.out.println("Scanner closed");
 
     }
 }

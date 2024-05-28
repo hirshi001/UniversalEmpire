@@ -57,7 +57,7 @@ public class ServerLauncher {
 
 
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws IOException {
 
         int websocketPort, javaPort;
         String KEYSTORE_PASSWORD = null;
@@ -89,7 +89,7 @@ public class ServerLauncher {
 
     private static HeadlessApplicationConfiguration getDefaultConfiguration() {
         HeadlessApplicationConfiguration configuration = new HeadlessApplicationConfiguration();
-        configuration.updatesPerSecond = -1; // When this value is negative, GameApp#render() is never called.
+        configuration.updatesPerSecond = 16; // When this value is negative, GameApp#render() is never called.
         //// If the above line doesn't compile, it is probably because the project libGDX version is older.
         //// In that case, uncomment and use the below line.
         //configuration.renderInterval = -1f; // When this value is negative, GameApp#render() is never called.

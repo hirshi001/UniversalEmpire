@@ -1,26 +1,14 @@
 package com.hirshi001.game.shared.control;
 
-import com.badlogic.gdx.ai.fma.Formation;
-import com.badlogic.gdx.ai.fma.FormationPattern;
-import com.badlogic.gdx.ai.fma.patterns.OffensiveCircleFormationPattern;
-import com.badlogic.gdx.ai.steer.utils.paths.LinePath;
-import com.badlogic.gdx.ai.utils.Location;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 import com.dongbat.jbump.IntPoint;
-import com.dongbat.jbump.Response;
 import com.hirshi001.buffer.buffers.ByteBuffer;
-import com.hirshi001.game.shared.entities.Entity;
-import com.hirshi001.game.shared.entities.GamePiece;
 import com.hirshi001.game.shared.entities.troop.Troop;
-import com.hirshi001.game.shared.game.Field;
 import com.hirshi001.game.shared.game.SearchNode;
 import com.hirshi001.game.shared.util.PathFinder;
-
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
+
 
 public class MoveTroopMovement extends Movement {
 
@@ -38,6 +26,8 @@ public class MoveTroopMovement extends Movement {
         this.x = x;
         this.y = y;
         this.radius2 = radius * radius;
+
+
 
         /*
         FormationPattern<Vector2> pattern = new OffensiveCircleFormationPattern<>(1F);

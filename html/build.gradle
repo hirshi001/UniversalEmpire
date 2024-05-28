@@ -44,6 +44,7 @@ dependencies {
 
     implementation "com.github.hirshi001:GWTRestAPI:$gwtRestApiVersion"
     implementation "com.github.hirshi001:GWTRestAPI:$gwtRestApiVersion:sources"
+    implementation "com.github.hirshi001:restapi:$restAPIVersion"
     implementation "com.github.hirshi001:restapi:$restAPIVersion:sources"
 
     implementation "com.github.hirshi001:bytebuffer:$byteBufferVersion:sources"
@@ -184,7 +185,7 @@ tasks.draftCompileGwt.dependsOn(addSource)
 tasks.checkGwt.dependsOn(addSource)
 
 // You can change the version below to JavaVersion.VERSION_11 if you use the 2.9.0 backend.
-sourceCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_16
 sourceSets.main.java.srcDirs = [ "src/main/java/" ]
 
 eclipse.project.name = appName + "-html"

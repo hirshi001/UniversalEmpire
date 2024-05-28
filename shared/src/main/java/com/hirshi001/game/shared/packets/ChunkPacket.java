@@ -74,7 +74,7 @@ public class ChunkPacket extends Packet {
             for (i = 0; i < chunk.getChunkSize(); i++) {
                 for (j = 0; j < chunk.getChunkSize(); j++) {
                     id = in.readInt();
-                    if (id != -1) chunk.setTile(i, j, Tiles.getInstance().tileRegistry.get(id));
+                    if (id != -1) chunk.setTile(i, j, Tiles.getInstance().getOrRegister(id));
                 }
             }
 

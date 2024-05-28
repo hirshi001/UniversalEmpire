@@ -1,7 +1,7 @@
 package com.hirshi001.game.shared.util.props;
 
+import com.hirshi001.betternetworkingutil.ByteBufSerializer;
 import com.hirshi001.buffer.buffers.ByteBuffer;
-import com.hirshi001.game.shared.util.serializer.ByteBufSerializer;
 
 import java.util.HashMap;
 import java.util.Map;

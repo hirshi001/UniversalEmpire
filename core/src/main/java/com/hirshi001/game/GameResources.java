@@ -125,7 +125,7 @@ public class GameResources {
 
     public <T> T get(String name) {
         try {
-            return assetManager.get(assets.get(name));
+            return assetManager.get(assets.getOrDefault(name, name));
         }catch (Exception e){
             throw e;
         }

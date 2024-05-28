@@ -1,6 +1,5 @@
 package com.hirshi001.game.shared.control;
 
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.hirshi001.buffer.buffers.ByteBuffer;
 import com.hirshi001.buffer.util.ByteBufUtil;

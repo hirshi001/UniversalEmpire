@@ -1,6 +1,9 @@
 package com.hirshi001.game.shared.util;
 
 import com.badlogic.gdx.ai.steer.utils.paths.LinePath;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
@@ -60,6 +63,29 @@ public class ByteBufferUtil {
             path.add(waypoint);
         }
         return new LinePath<>(path, open);
+    }
+
+    public static void writeTextureRegion(ByteBuffer out, TextureRegion textureRegion) {
+        out.writeInt(textureRegion.getRegionWidth());
+        out.writeInt(textureRegion.getRegionHeight());
+        Pixmap pixmap = textureRegion.getTexture().getTextureData().consumePixmap();
+        for(int x = textureRegion.getRegionX(); x < textureRegion.getRegionX() + textureRegion.getRegionWidth(); x++){
+            for(int y = textureRegion.getRegionY(); y < textureRegion.getRegionY() + textureRegion.getRegionHeight(); y++){
+                out.writeInt(pixmap.getPixel(x, y));
+            }
+        }
+    }
+
+    public static Pixmap readTextureRegion(ByteBuffer in) {
+        int width = in.readInt();
+        int height = in.readInt();
+        Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
+        for(int x = 0; x < width; x++){
+            for(int y = 0; y < height; y++){
+                pixmap.drawPixel(x, y, in.readInt());
+            }
+        }
+        return pixmap;
     }
 
 }

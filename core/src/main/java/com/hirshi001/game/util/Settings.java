@@ -2,6 +2,7 @@ package com.hirshi001.game.util;
 
 import com.badlogic.gdx.Input;
 import com.hirshi001.game.GameApp;
+import com.hirshi001.networking.util.defaultpackets.systempackets.NetworkConditionPackets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,25 @@ public class Settings {
         return true;
     }, 1, 10, 1);
 
+
+    public static FloatSliderSetting latency = new FloatSliderSetting("latency", 0F, (oldVal, newVal)-> {
+        GameApp.client.getChannel().sendTCP(new NetworkConditionPackets.LatencyPacket(newVal), null).performAsync();
+        System.out.println("New latency: " + newVal);
+        return true;
+    }, 0F, 2F, 0.01F);
+
+    public static FloatSliderSetting packetLossRate = new FloatSliderSetting("packet loss rate", 0F, (oldVal, newVal)-> {
+        GameApp.client.getChannel().sendTCP(new NetworkConditionPackets.PacketLossPacket(newVal), null).performAsync();
+        return true;
+    }, 0F, 1F, 0.01F);
+
+    public static BooleanSetting enableNetworkCondition = new BooleanSetting("enable network condition", false, (oldVal, newVal)-> {
+        GameApp.client.getChannel().sendTCP(new NetworkConditionPackets.EnableNetworkConditionPacket(newVal), null).performAsync();
+        System.out.println("Enabling network condition: " + newVal);
+        return true;
+    });
+
+
     public static KeybindSetting moveUp = new KeybindSetting("move up", Input.Keys.W);
     public static KeybindSetting moveDown = new KeybindSetting("move down", Input.Keys.S);
     public static KeybindSetting moveLeft = new KeybindSetting("move left", Input.Keys.A);
@@ -32,6 +52,9 @@ public class Settings {
     static {
         settings.add(zoom);
         settings.add(chunkLoadRadius);
+        settings.add(latency);
+        settings.add(packetLossRate);
+        settings.add(enableNetworkCondition);
         settings.add(moveUp);
         settings.add(moveDown);
         settings.add(moveLeft);

@@ -31,10 +31,11 @@ public class MainGameScreen extends GameScreen {
         super(gameApp);
         Gdx.app.log("MainGameScreen", "Created");
 
-        Tiles.register();
-        TileRenderers.register();
+        // Tiles.register();
+        // TileRenderers.register();
 
         GamePieces.register();
+        Tiles.setInstance(new Tiles(GameSettings.TILE_TEXTURE_SIZE, true));
         ActorMap.register();
 
         Styles.loadStyles();
@@ -94,9 +95,6 @@ public class MainGameScreen extends GameScreen {
                 Gdx.app.log("MainGameScreen", "Ping: " + ping);
             }).performAsync();
         }
-
-
-
 
         {
             Client client = GameApp.client;

@@ -1,9 +1,10 @@
 package com.hirshi001.game.shared.util.serializer;
 
+import com.hirshi001.betternetworkingutil.ByteBufSerializer;
 import com.hirshi001.buffer.buffers.ByteBuffer;
 import com.hirshi001.game.shared.control.FollowLeaderMovement;
 
-public class FollowLeaderMovementSerializer implements ByteBufSerializer<FollowLeaderMovement>{
+public class FollowLeaderMovementSerializer implements ByteBufSerializer<FollowLeaderMovement> {
     @Override
     public void serialize(FollowLeaderMovement object, ByteBuffer buffer) {
         buffer.writeInt(object.leaderId);
